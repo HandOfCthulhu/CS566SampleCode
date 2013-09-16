@@ -44,6 +44,7 @@
 
 #include "Image.h"
 
+
 std::ostream& operator <<( std::ostream &out, const Pixel &p ){
   p.write( out );
   return( out );
@@ -68,8 +69,13 @@ unsigned char* Image::read( const char *file_name ){
   int i;
 
   // open file
+#ifndef _WIN32
   if ((fp=fopen (file_name, "rb"))==NULL){
-    fprintf (stderr, "unable to open file%c\n", 7);
+#else
+  errno_t err;
+  if ((err=fopen_s (&fp, file_name, "rb")) != 0){
+#endif
+      fprintf (stderr, "unable to open file%c\n", 7);
     exit (1);
   }
 
@@ -85,7 +91,11 @@ unsigned char* Image::read( const char *file_name ){
     fgets (buffer, sizeof (buffer), fp);
   while (buffer[0] == '#' || buffer[0] == ' ');
 
+#ifndef _WIN32
   sscanf (buffer, "%d %d", &size_x, &size_y);
+#else
+  sscanf_s(buffer, "%d %d", &size_x, &size_y);
+#endif
 
   printf( "Image width: %d, Image height: %d\n", size_x, size_y );
 
@@ -94,7 +104,11 @@ unsigned char* Image::read( const char *file_name ){
     fgets (buffer, sizeof (buffer), fp);
   }while (buffer[0] == '#');
 
+#ifndef _WIN32
   sscanf (buffer, "%d", &maxval);
+#else
+  sscanf_s (buffer, "%d", &maxval);
+#endif
 
   // allocate RGBA texture buffer
   unsigned char *texture = (unsigned char *)malloc(size_x*size_y*4*sizeof(unsigned char));
@@ -119,7 +133,13 @@ unsigned char* Image::read( const char *file_name ){
 
 bool Image::write( const char *file_name ){
   Pixel *p = pixels;
+#ifndef _WIN32
   FILE  *fp = fopen( file_name, "w+b" );
+#else
+  FILE *fp;
+  errno_t err;
+  err = fopen_s(&fp, file_name, "w+b");
+#endif
   if( fp == NULL ){
     return false;
   }

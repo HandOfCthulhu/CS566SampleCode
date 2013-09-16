@@ -1,7 +1,7 @@
-/* Your Name Here
-* somebody at something dot TLD
+/* Gregory Parsons
+* gnparsons@gmail.com
 * CS 566
-* September 20XX
+* September 2013
 *
 */
 /*
@@ -69,7 +69,7 @@ unsigned char* Image::read( const char *file_name ){
   int i;
 
   // open file
-#ifndef _WIN32
+#ifndef _MSC_VER
   if ((fp=fopen (file_name, "rb"))==NULL){
 #else
   errno_t err;
@@ -91,7 +91,7 @@ unsigned char* Image::read( const char *file_name ){
     fgets (buffer, sizeof (buffer), fp);
   while (buffer[0] == '#' || buffer[0] == ' ');
 
-#ifndef _WIN32
+#ifndef _MSC_VER
   sscanf (buffer, "%d %d", &size_x, &size_y);
 #else
   sscanf_s(buffer, "%d %d", &size_x, &size_y);
@@ -104,7 +104,7 @@ unsigned char* Image::read( const char *file_name ){
     fgets (buffer, sizeof (buffer), fp);
   }while (buffer[0] == '#');
 
-#ifndef _WIN32
+#ifndef _MSC_VER
   sscanf (buffer, "%d", &maxval);
 #else
   sscanf_s (buffer, "%d", &maxval);
@@ -133,7 +133,7 @@ unsigned char* Image::read( const char *file_name ){
 
 bool Image::write( const char *file_name ){
   Pixel *p = pixels;
-#ifndef _WIN32
+#ifndef _MSC_VER
   FILE  *fp = fopen( file_name, "w+b" );
 #else
   FILE *fp;

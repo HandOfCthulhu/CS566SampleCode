@@ -40,9 +40,16 @@
 #ifndef _CAMERA_H_
 #define _CAMERA_H_
 
+#include "Vector3d.h"
+enum CameraMode {orthogonal, perspective, simple};
 class Camera{
-public:
-	Camera( ){};
-	~Camera( ){};
+	public:
+		Camera( );
+		Camera(CameraMode mode, Vector3d position, Vector3d direction);
+		~Camera( ){};
+	private:
+		CameraMode mode;
+		Vector3d position;
+		Vector3d direction;
 };
 #endif

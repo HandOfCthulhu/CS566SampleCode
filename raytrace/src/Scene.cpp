@@ -1,7 +1,7 @@
-/* Your Name Here
- * somebody at something dot TLD
+/* Gregory Parsons
+ * gnparsons@gmail.com
  * CS 566
- * September 20XX
+ * September 2013
  *
  */
 /*
@@ -37,6 +37,10 @@
  */
 
 #include "Scene.h"
+#include "RTObject.h"
+#include "Sphere.h"
+#include "Plane.h"
+#include "Triangle.h"
 #include <string>
 
 Scene::Scene( string inputFilename, string outputFilename, string depthFilename ) :
@@ -44,7 +48,7 @@ Scene::Scene( string inputFilename, string outputFilename, string depthFilename 
 	myOutputFile( outputFilename ),
 	myDepthFile( depthFilename ),
 	myCamera( ),
-	myBackgroundColor( 0.0, 0.0, 0.0 ),
+	myBackgroundColor( (channel)0.0, (channel)0.0, (channel)0.0 ),
 	lineNumber(0),
 	tokenCount(0),
 	length(0),
@@ -52,9 +56,9 @@ Scene::Scene( string inputFilename, string outputFilename, string depthFilename 
 	j(0)
 {
 	myNumberOfMaterials = -1;
-	materials = NULL;
-	myCurrentMaterial = NULL;
-	myGroup = NULL;
+	materials = vector<Material>();
+	myCurrentMaterial = Material();
+	myGroup = Group();
 }
 
 Scene::~Scene( ){
@@ -77,15 +81,15 @@ void Scene::setCurrentMaterial( int i ){
 	if( i >= myNumberOfMaterials ){
 	  throw( "Index out of range" );	
 	}else{
-		myCurrentMaterial = materials[i];
+		myCurrentMaterial = materials.at(i);
 	}
 }
 
-Material* Scene::currentMaterial( ){
+Material Scene::currentMaterial( ){
 	return( myCurrentMaterial );
 }
 
-Group* Scene::group( ){
+Group Scene::group( ){
 	return( myGroup );
 }
 
@@ -125,7 +129,6 @@ bool Scene::hasDepthFilePath( void ){
 	return( ret );
 }
 
-
 void Scene::setInputSceneFile( string file ){
 	myInputSceneFile = file;
 }
@@ -139,16 +142,19 @@ void Scene::setDepthFile( string file ){
 }
 
 float Scene::parseFloat( ){
+	//cout << "parseFloat: " << currentToken << endl;
 	float ret = (float)atof( currentToken );
 	return( ret );
 }
 
 double Scene::parseDouble( ){
+	//cout << "parseDouble: " << currentToken << endl;
 	double ret = (double)atof( currentToken );
 	return( ret );
 }
 
 int Scene::parseInt( ){
+	//cout << "parseInt: " << currentToken << endl;
 	int ret = atoi( currentToken );
 	return( ret );
 }
@@ -160,6 +166,9 @@ void Scene::checkToken( const char *str, const char *stage  ){
 		cerr << "Expected \'" << str << "\'" << endl;
 		exit( 1 );
 	}
+	//cout << stage << " parse correctly at line " << lineNumber << " token " << tokenCount << ": " << currentToken << endl;
+	//cout << "Current line: " << currentLine << endl;
+	//cout << "Expected \'" << str << "\'" << endl;
 }
 
 void Scene::parseCamera( ){
@@ -167,9 +176,9 @@ void Scene::parseCamera( ){
   if( strcmp(currentToken, "OrthographicCamera") == 0 ){
     parseOrthographicCamera( );
   }else if( strcmp(currentToken, "PerspectiveCamera") == 0 ){
-    // add me
+    parsePerspectiveCamera();
   }else if( strcmp(currentToken, "SimplePerspectiveCamera") == 0 ){
-    // add me
+    parseSimplePerspectiveCamera();
   }else{
   	checkToken( "OrthographicCamera | PerspectiveCamera | SimplePerspectiveCamera", "Camera" );
   }
@@ -180,6 +189,7 @@ void Scene::parseOrthographicCamera( ){
 	// from parseFloat is stored somewhere meaningful.
 	float vec[3];
 	checkToken( "OrthographicCamera", "Camera" );
+	myCamera.setMode(orthographic);
 	nextToken( );
 	checkToken( "{", "Camera" );
 	nextToken( );
@@ -188,18 +198,21 @@ void Scene::parseOrthographicCamera( ){
 		nextToken( );
 		vec[i] = parseFloat( );
 	}
+	myCamera.setPosition(Vector3d(vec));
 	nextToken( );
 	checkToken( "direction", "Camera" );
 	for( int i = 0; i < 3; i++ ){
 		nextToken( );
 		vec[i] = parseFloat( );
 	}
+	myCamera.setDirection(Vector3d(vec).normalized());
 	nextToken( );
 	checkToken( "up", "Camera" );
 	for( int i = 0; i < 3; i++ ){
 		nextToken( );
 		vec[i] = parseFloat( );
 	}
+	myCamera.setUpVector(Vector3d(vec).normalized());
 	
 	nextToken( );
 	checkToken( "}", "Camera" );
@@ -208,7 +221,6 @@ void Scene::parseOrthographicCamera( ){
 void Scene::parseViewPlane( ){
 	// You will need to adjust this so that the result 
 	// from parseFloat is stored somewhere meaningful.
-	float val;
 	nextToken( );
 	checkToken( "ViewPlane", "ViewPlane" );
 	nextToken( );
@@ -216,17 +228,16 @@ void Scene::parseViewPlane( ){
 	nextToken( );
 	checkToken( "width", "ViewPlane" );
 	nextToken( );
-	val = parseFloat( );
-
+	myCamera.setViewPlaneWidth(parseInt( ));
 	nextToken( );
 	checkToken( "height", "ViewPlane" );
 	nextToken( );
-	val = parseFloat( );
+	myCamera.setViewPlaneHeight(parseInt( ));
 
 	nextToken( );
 	checkToken( "pixelsize", "ViewPlane" );
 	nextToken( );
-	val = parseFloat( );
+	myCamera.setPixelSize(parseFloat( ));
 	
 	nextToken( );
 	checkToken( "}", "ViewPlane" );
@@ -239,7 +250,7 @@ void Scene::parseBackground( ){
 	nextToken( );
 	checkToken( "Background", "Background" );
 	nextToken( );
-	checkToken( "{", "Camera" );
+	checkToken( "{", "Background" );
 	
 	nextToken( );
 	checkToken( "color", "Background" );
@@ -247,19 +258,500 @@ void Scene::parseBackground( ){
 		nextToken( );
 		vec[i] = parseFloat( );
 	}
-	
+	myBackgroundColor = Pixel(vec);
 	nextToken( );
 	checkToken( "}", "Background" );
 }
 
+void Scene::parsePhongMaterial() {
+	float diffColor[3] = {0.0,0.0,0.0};
+	float transColor[3] = {0.0,0.0,0.0};
+	float reflectColor[3] = {0.0,0.0,0.0};
+	float specColor[3] = {0.0,0.0,0.0};
+	float indRefract = 0.0;
+	float exp = 0.0;
+
+	checkToken( "PhongMaterial", "PhongMaterial" );
+	nextToken( );
+	checkToken( "{", "PhongMaterial");
+	nextToken( );
+	checkToken( "diffuseColor", "PhongMaterial");
+	
+	for(int i = 0; i < 3; i++) {
+		nextToken( );
+		diffColor[i] = parseFloat ( );
+	}
+	
+	while(strcmp(currentToken, "}") != 0) {
+		nextToken( );
+		if (strcmp(currentToken, "specularColor")== 0) {
+			for (int i = 0; i < 3; i++) {
+				nextToken();
+				specColor[i] = parseFloat();
+			}
+		} else if (strcmp(currentToken, "exponent")==0) {
+			nextToken();
+			exp = parseFloat();
+		} else if (strcmp(currentToken, "transparentColor")==0) {
+			for(int i = 0; i < 3; i++) {
+				nextToken();
+				transColor[i] = parseFloat();
+			}
+		} else if (strcmp(currentToken, "reflectiveColor")==0) {
+			for (int i = 0; i < 3; i++) {
+				nextToken();
+				reflectColor[i] = parseFloat();
+			}
+		} else if (strcmp(currentToken, "indexOfRefraction")==0) {
+			nextToken();
+			indRefract = parseFloat();
+		} else if (strcmp(currentToken, "}") == 0) {
+			//do nothing, you'll be exiting this loop
+		} else {
+			checkToken("specularColor | exponent | transparentColor | reflectiveColor | indexOfRefraction | }", "PhongMaterial");
+		}
+	}
+	checkToken( "}", "PhongMaterial");
+	materials.push_back(Material(Vector3d(diffColor), exp, Vector3d(specColor), Vector3d(reflectColor), Vector3d(transColor), indRefract));
+}
+
 void Scene::parseMaterials( ){
-	cerr << "materials not implemented" << endl;
+	nextToken( );
+	checkToken("Materials", "Materials");
+	nextToken( );
+	checkToken("{", "Materials");
+	nextToken();
+	checkToken("numMaterials", "Materials");
+	nextToken();
+	myNumberOfMaterials = parseInt( );
+	for (int i = 0; i < myNumberOfMaterials; i++) {
+		nextToken();
+		if( strcmp(currentToken, "PhongMaterial") == 0 ){
+			parsePhongMaterial( );
+		}else{
+  			checkToken( "PhongMaterial", "Materials" );
+		}
+	}
+	nextToken( );
+	checkToken("}", "Materials" );
 }
 
-void Scene::parseGroup( ){
-	cerr << "group not implemented" << endl;
+void Scene::parseGroup( ) {
+	nextToken();
+	checkToken("Group", "Group");
+	nextToken();
+	checkToken("{", "Group");
+	nextToken();
+	checkToken("numObjects", "Group");
+	nextToken();
+	myNumberOfObjects = parseInt( );
+	//nextToken();
+	//checkToken("MaterialIndex", "Group");
+	//nextToken();
+	//setCurrentMaterial(parseInt());
+	int i = 0;
+	while (i < myNumberOfObjects) {
+		nextToken();
+		if (strcmp(currentToken, "MaterialIndex")==0) {
+			nextToken();
+			setCurrentMaterial(parseInt());
+		} else if (strcmp(currentToken, "Plane")==0) {
+			parsePlane();
+			i++;
+		} else if ( strcmp(currentToken, "Sphere") == 0) {
+			parseSphere();
+			i++;
+		} else if ( strcmp(currentToken, "Triangle") == 0) {
+			parseTriangle();
+			i++;
+		} else if (strcmp(currentToken, "TriangleMesh") == 0) {
+			parseTriangleMesh();
+			i++;
+		} else if (strcmp(currentToken, "Group")==0) {
+			parseGroup();
+			i++;
+		} else if (strcmp(currentToken, "Transform")==0) {
+			parseTransform();
+			i++;
+		} else {
+			checkToken( "Triangle | Sphere | Plane", "Group" );
+		}
+	}
+	
+	nextToken();
+	checkToken("}", "Group");
 }
 
+void Scene::parseSphere( ) {
+	float vec[3];
+	float rad;
+	checkToken("Sphere", "Sphere");
+	nextToken();
+	checkToken("{", "Sphere");
+	nextToken();
+	checkToken("center", "Sphere");
+	for (int i = 0; i < 3; i++) {
+		nextToken();
+		vec[i] = parseFloat();
+	}
+	nextToken();
+	checkToken("radius", "Sphere");
+	nextToken();
+	rad = parseFloat();
+	nextToken();
+	checkToken("}", "Sphere");
+	Sphere* newSphere = new Sphere(Vector3d(vec), rad, myCurrentMaterial);
+	myGroup.addObject(newSphere);
+}
+
+void Scene::parsePlane() {
+	float vec[3];
+	float offset;
+	checkToken("Plane", "Plane");
+	nextToken();
+	checkToken("{", "Plane");
+	nextToken();
+	checkToken("normal", "Plane");
+	for (int i = 0; i < 3; i++) {
+		nextToken();
+		vec[i] = parseFloat();
+	}
+	nextToken();
+	checkToken("offset", "Plane");
+	nextToken();
+	offset = parseFloat();
+	nextToken();
+	checkToken("}", "Plane");
+	Plane* newPlane = new Plane(Vector3d(vec).normalized(), offset, myCurrentMaterial);
+	myGroup.addObject(newPlane);
+}
+
+void Scene::parseTriangle( ) {
+	float vecA[3];
+	float vecB[3];
+	float vecC[3];
+	checkToken("Triangle", "Triangle");
+	nextToken();
+	checkToken("{", "Triangle");
+	nextToken();
+	checkToken("vertex0", "Triangle");
+	for(int i = 0; i < 3; i++) {
+		nextToken();
+		vecA[i] = parseFloat();
+	}
+	checkToken("vertex1", "Triangle");
+	for(int i = 0; i < 3; i++) {
+		nextToken();
+		vecB[i] = parseFloat();
+	}
+	checkToken("vertex2", "Triangle");
+	for(int i = 0; i < 3; i++) {
+		nextToken();
+		vecC[i] = parseFloat();
+	}
+	Triangle* newTriangle = new Triangle(Vector3d(vecA), Vector3d(vecB), Vector3d(vecC), myCurrentMaterial);
+}
+
+void Scene::parseTriangleMesh( ) {
+	checkToken("TriangleMesh", "TriangleMesh");
+	nextToken();
+	checkToken("{", "TriangleMesh");
+	nextToken();
+	checkToken("ply_file", "TriangleMesh");
+	nextToken();
+	string filename = currentToken;
+	nextToken();
+	checkToken("}", "TriangleMesh");
+	cout << "Triangle Meshs Not Yet Implemented" << endl;
+	///TODO: Add code to load triangle mesh
+}
+
+void Scene::parseTransform() {
+	checkToken("Transform", "Transform");
+	nextToken();
+	checkToken("{", "Transform");
+
+	nextToken();
+	if(strcmp(currentToken, "Translate")==0) {
+		cout << "Transform not yet implemented" << endl;
+		for(int i = 0 ; i < 3; i++) {
+			nextToken();
+			float f = parseFloat();
+		}
+		nextToken();
+		if (strcmp(currentToken, "Group")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseGroup();
+		} else if (strcmp(currentToken, "Triangle")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangle();
+		} else if (strcmp(currentToken, "Sphere")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseSphere();
+		} else if (strcmp(currentToken, "Plane")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parsePlane();
+		} else if (strcmp(currentToken, "TriangleMesh")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangleMesh();
+		} else if (strcmp(currentToken, "Transform")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTransform();
+		}
+	} else if (strcmp(currentToken, "Scale")==0) {
+		cout << "Transform not yet implemented" << endl;
+		for (int i = 0; i < 3; i++) {
+			nextToken();
+			float f = parseFloat();
+		}
+				
+		nextToken();
+		if (strcmp(currentToken, "Group")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseGroup();
+		} else if (strcmp(currentToken, "Triangle")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangle();
+		} else if (strcmp(currentToken, "Sphere")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseSphere();
+		} else if (strcmp(currentToken, "Plane")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parsePlane();
+		} else if (strcmp(currentToken, "TriangleMesh")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangleMesh();
+		} else if (strcmp(currentToken, "Transform")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTransform();
+		}
+	} else if (strcmp(currentToken, "XRotate")==0) {
+		cout << "Transform not yet implemented" << endl;
+		nextToken();
+		float f = parseFloat();
+		nextToken();
+		if (strcmp(currentToken, "Group")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseGroup();
+		} else if (strcmp(currentToken, "Triangle")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangle();
+		} else if (strcmp(currentToken, "Sphere")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseSphere();
+		} else if (strcmp(currentToken, "Plane")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parsePlane();
+		} else if (strcmp(currentToken, "TriangleMesh")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangleMesh();
+		} else if (strcmp(currentToken, "Transform")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTransform();
+		}
+	} else if (strcmp(currentToken, "YRotate")==0) {
+		cout << "Transform not yet implemented" << endl;
+		nextToken();
+		float f = parseFloat();
+		nextToken();
+		if (strcmp(currentToken, "Group")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseGroup();
+		} else if (strcmp(currentToken, "Triangle")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangle();
+		} else if (strcmp(currentToken, "Sphere")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseSphere();
+		} else if (strcmp(currentToken, "Plane")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parsePlane();
+		} else if (strcmp(currentToken, "TriangleMesh")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangleMesh();
+		} else if (strcmp(currentToken, "Transform")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTransform();
+		}
+	} else if (strcmp(currentToken, "ZRotate")==0) {
+		cout << "Transform not yet implemented" << endl;
+		nextToken();
+		float f = parseFloat();
+		nextToken();
+		if (strcmp(currentToken, "Group")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseGroup();
+		} else if (strcmp(currentToken, "Triangle")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangle();
+		} else if (strcmp(currentToken, "Sphere")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseSphere();
+		} else if (strcmp(currentToken, "Plane")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parsePlane();
+		} else if (strcmp(currentToken, "TriangleMesh")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangleMesh();
+		} else if (strcmp(currentToken, "Transform")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTransform();
+		}
+	} else if (strcmp(currentToken, "Rotate")==0) {
+		cout << "Transform not yet implemented" << endl;
+		for (int i = 0; i < 3; i++) {
+			nextToken();
+			float f = parseFloat();
+		}
+		nextToken();
+		if (strcmp(currentToken, "Group")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseGroup();
+		} else if (strcmp(currentToken, "Triangle")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangle();
+		} else if (strcmp(currentToken, "Sphere")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseSphere();
+		} else if (strcmp(currentToken, "Plane")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parsePlane();
+		} else if (strcmp(currentToken, "TriangleMesh")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangleMesh();
+		} else if (strcmp(currentToken, "Transform")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTransform();
+		}
+	} else if (strcmp(currentToken, "Matrix")==0) {
+		cout << "Transform not yet implemented" << endl;
+		for (int i = 0; i < 16; i++) {
+			nextToken();
+			float f = parseFloat();
+		}
+		nextToken();
+		if (strcmp(currentToken, "Group")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseGroup();
+		} else if (strcmp(currentToken, "Triangle")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangle();
+		} else if (strcmp(currentToken, "Sphere")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseSphere();
+		} else if (strcmp(currentToken, "Plane")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parsePlane();
+		} else if (strcmp(currentToken, "TriangleMesh")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTriangleMesh();
+		} else if (strcmp(currentToken, "Transform")==0) {
+			cout << "Transform not yet implemented" << endl;
+			parseTransform();
+		}
+	} else if (strcmp(currentToken, "Group")==0) {
+		cout << "Transform not yet implemented" << endl;
+		parseGroup();
+	} else if (strcmp(currentToken, "Triangle")==0) {
+		cout << "Transform not yet implemented" << endl;
+		parseTriangle();
+	} else if (strcmp(currentToken, "Sphere")==0) {
+		cout << "Transform not yet implemented" << endl;
+		parseSphere();
+	} else if (strcmp(currentToken, "Plane")==0) {
+		cout << "Transform not yet implemented" << endl;
+		parsePlane();
+	} else if (strcmp(currentToken, "TriangleMesh")==0) {
+		cout << "Transform not yet implemented" << endl;
+		parseTriangleMesh();
+	} else if (strcmp(currentToken, "Transform")==0) {
+		cout << "Transform not yet implemented" << endl;
+		parseTransform();
+	}
+
+	nextToken();
+	checkToken("}", "Transform");
+}
+
+void Scene::parseSimplePerspectiveCamera() {
+	float vec[3];
+	checkToken("SimplePerspectiveCamera", "SimplePerspectiveCamera");
+	nextToken();
+	checkToken("{", "SimplePerspectiveCamera");
+	nextToken();
+	checkToken("center", "SimplePerspectiveCamera");
+	for (int i = 0; i < 3; i++) {
+		nextToken();
+		vec[i] = parseFloat();
+	}
+	myCamera.setPosition(Vector3d(vec));
+	nextToken();
+	checkToken("direction", "SimplePerspectiveCamera");
+	for (int i = 0; i < 3; i++) {
+		nextToken();
+		vec[i] = parseFloat();
+	}
+	myCamera.setDirection(Vector3d(vec));
+	nextToken();
+	checkToken("up", "SimplePerspectiveCamera");
+	for (int i = 0; i < 3; i++) {
+		nextToken();
+		vec[i] = parseFloat();
+	}
+	myCamera.setUpVector(Vector3d(vec));
+	nextToken();
+	checkToken("distance", "SimplePerspectiveCamera");
+	nextToken();
+	myCamera.setDistance(parseFloat());
+	nextToken();
+	checkToken("}", "SimplePerspectiveCamera");
+}
+
+void Scene::parsePerspectiveCamera() {
+	float vec[3];
+	checkToken("SimplePerspectiveCamera", "PerspectiveCamera");
+	nextToken();
+	checkToken("{", "PerspectiveCamera");
+	nextToken();
+	checkToken("center", "PerspectiveCamera");
+	for (int i = 0; i < 3; i++) {
+		nextToken();
+		vec[i] = parseFloat();
+	}
+	myCamera.setPosition(Vector3d(vec));
+	nextToken();
+	checkToken("direction", "PerspectiveCamera");
+	for (int i = 0; i < 3; i++) {
+		nextToken();
+		vec[i] = parseFloat();
+	}
+	myCamera.setDirection(Vector3d(vec));
+	nextToken();
+	checkToken("up", "PerspectiveCamera");
+	for (int i = 0; i < 3; i++) {
+		nextToken();
+		vec[i] = parseFloat();
+	}
+	myCamera.setUpVector(Vector3d(vec));
+	nextToken();
+	checkToken("angle", "PerspectiveCamera");
+	nextToken();
+	myCamera.setAngle(parseFloat());
+	nextToken();
+	checkToken("}", "PerspectiveCamera");
+}
+
+void Scene::parseLights() {
+	//do nothing for now
+}
+
+void Scene::parsePointLight() {
+	//do nothing for now
+}
+
+void Scene::parseDirectionalLight() {
+	//do nothing for now
+}
 
 bool Scene::parse( ){	
 	bool ret = true;
@@ -272,7 +764,8 @@ bool Scene::parse( ){
 		exit( 1 );
 	}
 	parseCamera( );
-  parseViewPlane( );
+	parseViewPlane( );
+	parseLights( );
 	parseBackground( );
 	parseMaterials( );
 	parseGroup( );
@@ -298,6 +791,7 @@ void Scene::advance( ){
 		i = j;
 	}
 }
+
 void Scene::nextOnLine( ){
 	//advance( );
 	while( currentLine[j] != ' ' && currentLine[j] != '\t' && currentLine[j] != '\n' && currentLine[j] != 0 ){
@@ -341,19 +835,19 @@ void Scene::nextToken( ){
 	}
 }
 
-
 void Scene::write( std::ostream &out ) const {
 	out << "Input scene file: " << myInputSceneFile << endl;
 	out << "Output file: " << myOutputFile << endl;
 	out << "Depth file: " << myDepthFile << endl;
-	out << "Camera:" << endl;
-	// not implemented yet out << myCamera << endl;
+	out << myCamera << endl;
 	out << "Background Color: " << myBackgroundColor << endl;
 	out << "Number of Materials: " << myNumberOfMaterials << endl;
-	out << "Materials:" << endl;
+	for (int i = 0; i < myNumberOfMaterials; i++)
+	{
+		out << materials[i] << endl;
+	}
 	// not implemented yet copy(materials[0], materials[myNumberOfMaterials], ostream_iterator<Material>(out, "\n" );
-	out << "Group:" << endl;
-	// not implemented yet out << myGroup << endl;
+	out << myGroup << endl;
 }
 
 std::ostream& operator <<( std::ostream &out, const Scene &s ){

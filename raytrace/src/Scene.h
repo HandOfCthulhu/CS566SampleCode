@@ -1,7 +1,7 @@
-/* Your Name Here
- * somebody at something dot TLD
+/* Gregory N Parsons
+ * gnparsons@gmail.com
  * CS 484
- * September 20xx
+ * September 2013
  *
  */
 /*
@@ -45,6 +45,7 @@
 #include "Image.h"
 #include "Material.h"
 #include "Group.h"
+#include "RTObject.h"
 
 #ifndef _SCENE_H_
 #define _SCENE_H_
@@ -61,8 +62,8 @@ class Scene{
 		Pixel& backgroundColor( );
 		int numberOfMaterials( );
 		void setCurrentMaterial( int i );
-		Material* currentMaterial( );
-		Group* group( );
+		Material currentMaterial( );
+		Group group( );
 		string& inputSceneFile( );
 		string& outputFile( );
 		string& depthFile( );
@@ -87,9 +88,11 @@ class Scene{
 		Camera myCamera;
 		Pixel myBackgroundColor;
 		int myNumberOfMaterials;
-		Material **materials;
-		Material *myCurrentMaterial;
-		Group *myGroup;
+		//Material **materials;
+		vector<Material> materials;
+		Material myCurrentMaterial;
+		int myNumberOfObjects;
+		Group myGroup;
 		ifstream inputFileStream;
 
 		// For parsing
@@ -97,24 +100,37 @@ class Scene{
 		char currentToken[255];
 		int lineNumber;
 		int tokenCount;
-    int length;
-    int i;
-    int j;
+		int length;
+		int i;
+		int j;
 		void nextToken( );
 		void parseCamera( );
-    void parseOrthographicCamera( );
+		void parseOrthographicCamera( );
 		void nextOnLine( );
 		bool areMoreTokens( );
 		void advance( );
 		void checkToken( const char *str, const char *stage  );
 		void parseBackground( );
 		float parseFloat( );
-    double parseDouble( );
+		double parseDouble( );
 		int parseInt( );
 		// Finish these...
+		void parsePhongMaterial( );
 		void parseViewPlane( );
 		void parseMaterials( );
 		void parseGroup( );
+		void parseSphere( );
+		void parsePlane( );
+		void parseTriangle( );
+		void parseTriangleMesh( );
+		void parseTransform();
+		void parseTranslate();
+		void parseSimplePerspectiveCamera();
+		void parsePerspectiveCamera();
+		void parseLights();
+		void parsePointLight();
+		void parseDirectionalLight();
+
 };
 
 std::ostream& operator <<( std::ostream &out, const Scene &s );

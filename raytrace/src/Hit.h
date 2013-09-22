@@ -1,7 +1,7 @@
-/* Your Name Here
- * somebody at something dot TLD
+/* Gregory Parsons
+ * gnparsons@gmail.com
  * CS 566
- * September 20XX
+ * September 2013
  *
  */
 /*
@@ -38,10 +38,20 @@
 
 #ifndef _HIT_H_
 #define _HIT_H_
+#include "Vector3d.h"
 
 class Hit{
 public:
-	Hit( );
-	~Hit( );
+	Hit( ) {_hit = false; _depth = 0.0; _position = Vector3d(); _color = Vector3d();};
+	float getDepth() {return(_depth);};
+	bool didHit() {return(_hit);};
+	Vector3d getHitLocation() {return(_position); };
+	Vector3d getColor() {return(_color);};
+	~Hit( ) {};
+private:
+	bool _hit;
+	float _depth;
+	Vector3d _position;
+	Vector3d _color;
 };
 #endif

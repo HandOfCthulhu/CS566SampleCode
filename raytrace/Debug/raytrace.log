@@ -1,0 +1,27 @@
+﻿Build started 9/22/2013 5:03:16 AM.
+     1>Project "C:\Users\Gregory Parsons\Documents\GitHub\CS566SampleCode\raytrace\raytrace.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt src\Camera.cpp src\Image.cpp src\raytrace.cpp
+         raytrace.cpp
+         Image.cpp
+         Camera.cpp
+         Generating Code...
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Gregory Parsons\Documents\GitHub\CS566SampleCode\raytrace\Debug\raytrace.exe" /INCREMENTAL /NOLOGO /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Gregory Parsons\Documents\GitHub\CS566SampleCode\raytrace\Debug\raytrace.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Gregory Parsons\Documents\GitHub\CS566SampleCode\raytrace\Debug\raytrace.lib" /MACHINE:X86 Debug\Camera.obj
+         Debug\getopt_long.obj
+         Debug\Group.obj
+         Debug\Image.obj
+         Debug\Material.obj
+         Debug\Plane.obj
+         Debug\raytrace.obj
+         Debug\RTObject.obj
+         Debug\Scene.obj
+         Debug\Sphere.obj
+         Debug\Triangle.obj
+         Debug\Vector3d.obj
+         raytrace.vcxproj -> C:\Users\Gregory Parsons\Documents\GitHub\CS566SampleCode\raytrace\Debug\raytrace.exe
+     1>Done Building Project "C:\Users\Gregory Parsons\Documents\GitHub\CS566SampleCode\raytrace\raytrace.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.37

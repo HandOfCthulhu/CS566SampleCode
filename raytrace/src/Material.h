@@ -1,7 +1,7 @@
-/* Your Name Here
- * somebody at something dot TLD
+/* Gregory Parsons
+ * gnparsons@gmail.com
  * CS 566
- * September 20XX
+ * September 2013
  *
  */
 /*
@@ -38,10 +38,38 @@
 
 #ifndef _PHONG_MATERIAL_H_
 #define _PHONG_MATERIAL_H_
+#include "Vector3d.h"
 
 class Material{
-public:
-	Material( );
-	~Material( );
+	public:
+		Material( );
+		Material(Vector3d color, float exponent, Vector3d specColor, Vector3d reflecColor, Vector3d transColor, float refractInd);
+		
+		void setDiffColor(Vector3d color);
+		void setReflectiveColor(Vector3d color);
+		void setTransparencyColor(Vector3d color);
+		void setSpecularColor(Vector3d color);
+
+		void setExponent(float exp);
+		void setRefractionIndex(float refractInd);
+		
+		Vector3d getDiffuseColor();
+		Vector3d getReflectiveColor();
+		Vector3d getTransparencyColor();
+		Vector3d getSpecularColor();
+		float getIndexOfRefraction();
+		float getSpecularExponent();
+
+		void write( std::ostream &out ) const;
+
+		~Material( );
+	private:
+		Vector3d _diffColor;
+		Vector3d _specColor;
+		Vector3d _transColor;
+		Vector3d _reflectColor;
+		float _exponent;
+		float _indxRefract;
 };
+std::ostream& operator <<( std::ostream &out, const Material &m );
 #endif

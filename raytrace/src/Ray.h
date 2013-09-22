@@ -1,7 +1,7 @@
-/* Your Name Here
- * somebody at something dot TLD
+/* Gregory Parsons
+ * gnparsons@gmail.com
  * CS 566
- * September 20XX
+ * September 2013
  *
  */
 /*
@@ -38,10 +38,19 @@
 
 #ifndef _RAY_H_
 #define _RAY_H_
+#include "Vector3d.h"
 
 class Ray{
-public:
-	Ray( );
-	~Ray( );
+	public:
+		Ray(void) {_o = Vector3d(); _d = Vector3d(); };
+		Ray(Vector3d origin, Vector3d direction) { _o = origin; _d = direction.normalized(); };
+		Vector3d getOrigin() { return (_o); };
+		Vector3d getDirection() { return (_d); };
+		void setOrigin(Vector3d origin) { _o = origin; };
+		void setDirection(Vector3d direction) { _d = direction.normalized(); };
+		~Ray(void){};
+	private:
+		Vector3d _o;
+		Vector3d _d;
 };
 #endif

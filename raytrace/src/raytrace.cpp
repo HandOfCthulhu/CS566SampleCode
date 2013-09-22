@@ -107,8 +107,35 @@ int main( int argc, char **argv ){
 	if( gTheScene->hasInputSceneFilePath( ) &&
 			gTheScene->hasOutputFilePath( ) &&
 			gTheScene->hasDepthFilePath( ) ){
-		gTheScene->parse( );	
-		cout << *gTheScene << endl;	
+		gTheScene->parse( );
+		cout << *gTheScene << endl;
+		Image depth = Image(gTheScene->camera().numPxWidth(), gTheScene->camera().numPxHeight());
+		Image output = Image(gTheScene->camera().numPxWidth(), gTheScene->camera().numPxHeight());
+		Hit h;
+		int x=0, y=0;
+		while(!(gTheScene->camera().isDone()))
+		{
+			x=gTheScene->camera().getLastX();
+			y=gTheScene->camera().getLastY();
+			cout << "(" << x << ", " << y << ")" << endl;
+			h = gTheScene->group().intersect(gTheScene->camera().getNextRay());
+			if (h.didHit()) {
+				cout << "Depth" << endl;
+				depth(x, y) = Pixel(Vector3d(h.getDepth(), h.getDepth(), h.getDepth()));
+				cout << "out" << endl;
+				output(x,y) = Pixel(Vector3d(h.getColor()));
+			} else {
+				cout << "Depth=BG" << endl;
+				depth(x, y) = gTheScene->backgroundColor();
+				cout << "OUT=BG" << endl;
+				output(x, y) = gTheScene->backgroundColor();
+			}
+		}
+		cout << "Writing Depth File" << endl;
+		depth.write(gTheScene->depthFile().c_str());
+		cout << "Writing Output File" << endl;
+		output.write(gTheScene->outputFile().c_str());
+		cout << "Wrote Both Files" << endl;
 	}else{
 		usage( "You specify an input scene file, an output file and a depth file." );
 	}

@@ -1,7 +1,7 @@
-/* Your Name Here
- * somebody at something dot TLD
+/* Gregory Parsons
+ * gnparsons@gmail.com
  * CS 566
- * September 20XX
+ * September 2013
  *
  */
 /*

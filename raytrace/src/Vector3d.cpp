@@ -1,4 +1,12 @@
+/* Gregory Parsons
+ * gnparsons@gmail.com
+ * CS 566
+ * September 2013
+ *
+ */
+
 #include "Vector3d.h"
+#include <iostream>
 #include <cmath>
 
 Vector3d::Vector3d(void) {
@@ -11,6 +19,12 @@ Vector3d::Vector3d(float x, float y, float z) {
 	_x = x;
 	_y = y;
 	_z = z;
+}
+
+Vector3d::Vector3d(float vec[3]) {
+	_x = vec[0];
+	_y = vec[1];
+	_z = vec[2];
 }
 
 float Vector3d::dotProduct(Vector3d operand) {
@@ -64,6 +78,22 @@ float Vector3d::getLength() {
 	return(sqrt(_x*_x+_y*_y+_z*_z));
 }
 
-Vector3d::~Vector3d(void)
-{
+Vector3d Vector3d::plus(Vector3d operand) {
+	return(Vector3d(_x+operand.getX(), _y+operand.getY(), _z+operand.getZ()));
+}
+
+Vector3d Vector3d::negative() {
+	return(Vector3d(-1*_x, -1*_y, -1*_z));
+}
+
+std::ostream& operator <<( std::ostream &out, const Vector3d &v ){
+	v.write( out );
+	return( out );
+}
+
+void Vector3d::write( std::ostream &out ) const{
+	out << "(" << _x << ", " << _y << ", " << _z << ")";
+}
+
+Vector3d::~Vector3d(void) {
 }

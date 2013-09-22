@@ -1,7 +1,7 @@
-/* Your Name Here
- * somebody at something dot TLD
+/* Gregory N Parsons
+ * gnparsons@gmail.com
  * CS 566
- * September 20XX
+ * September 2013
  *
  */
 /*
@@ -35,14 +35,25 @@
  * $Id: Group.h 4419 2013-09-12 04:16:46Z mshafae $
  *
  */
-
+#include <vector>
+#include "Ray.h"
+#include "Hit.h"
+#include "RTObject.h"
 
 #ifndef _GROUP_H_
 #define _GROUP_H_
 
+
 class Group{
-public:
-	Group( );
-	~Group( );
+	public:
+		Group( );
+		void addObject(RTObject* obj);
+		Hit intersect(Ray r);
+		void write( std::ostream &out ) const;
+		~Group( );
+	private:
+		int _numObjects;
+		std::vector<RTObject*> _objects;
 };
+std::ostream& operator <<( std::ostream &out, const Group &g );
 #endif

@@ -50,7 +50,6 @@ std::ostream& operator <<( std::ostream &out, const Pixel &p ){
   return( out );
 }
 
-
 Pixel& Image::operator()( int i, int j ) { return *( pixels + ( i * width + j ) ); }  
 
 Image::Image( int x_res, int y_res ){
@@ -132,22 +131,31 @@ unsigned char* Image::read( const char *file_name ){
 }
 
 bool Image::write( const char *file_name ){
+	std::cout << "In Write Routine A" << std::endl;
   Pixel *p = pixels;
+  std::cout << "In Write Routine B" << std::endl;
 #ifndef _MSC_VER
+  std::cout << "In Write Routine C1" << std::endl;
   FILE  *fp = fopen( file_name, "w+b" );
 #else
+  std::cout << "In Write Routine C2" << std::endl;
   FILE *fp;
   errno_t err;
   err = fopen_s(&fp, file_name, "w+b");
 #endif
+  std::cout << "In Write Routine D" << std::endl;
   if( fp == NULL ){
     return false;
   }
+  std::cout << "In Write Routine E" << std::endl;
   fprintf( fp, "P6\n%d %d\n255\n", width, height );
+  std::cout << "In Write Routine F" << std::endl;
   for( int i = 0; i < width * height; i++ ){
     fprintf( fp, "%c%c%c", p->r, p->g, p->b );
     p++;
   }
+  std::cout << "In Write Routine G" << std::endl;
   fclose( fp );
+  std::cout << "In Write Routine H" << std::endl;
   return true;
 }

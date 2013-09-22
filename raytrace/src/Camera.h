@@ -1,7 +1,7 @@
-/* Your Name Here
- * somebody at something dot TLD
+/* Gregory Parsons
+ * gnparsons@gmail.com
  * CS 566
- * September 20XX
+ * September 2013
  *
  */
 /*
@@ -39,17 +39,65 @@
 
 #ifndef _CAMERA_H_
 #define _CAMERA_H_
-
 #include "Vector3d.h"
-enum CameraMode {orthogonal, perspective, simple};
+#include "Ray.h"
+
+enum CameraMode {orthographic, perspective, simple};
 class Camera{
 	public:
 		Camera( );
-		Camera(CameraMode mode, Vector3d position, Vector3d direction);
+		Camera(CameraMode mode, Vector3d position, Vector3d up, Vector3d direction);
 		~Camera( ){};
+
+		Ray getNextRay();
+		int getLastX();
+		int getLastY();
+		int numPxWidth();
+		int numPxHeight();
+		bool isDone();
+
+		CameraMode getMode();
+		Vector3d getPosition();
+		Vector3d getDirection();
+		Vector3d getUpVector();
+		float getAngle();
+		float getDistance();
+		int getViewPlaneWidth();
+		int getViewPlaneHeight();
+		float getPixelSize();
+
+		void setMode(CameraMode mode);
+		void setPosition(Vector3d pos);
+		void setDirection(Vector3d dir);
+		void setUpVector(Vector3d up);
+		void setAngle(float angle);
+		void setDistance(float distance);
+		void setViewPlaneWidth(int planeWidth);
+		void setViewPlaneHeight(int planeHeight);
+		void setPixelSize(float pxSize);
+
+		void write( std::ostream &out ) const;
+
 	private:
-		CameraMode mode;
-		Vector3d position;
-		Vector3d direction;
+		Vector3d calcRayBase(int x, int y);
+		int _x;
+		int _y;
+		int _pxWidth;
+		int _pxHeight;
+		bool done;
+
+		CameraMode _mode;
+		Vector3d _position;
+		Vector3d _direction;
+		Vector3d _up;
+
+		Vector3d _right;
+
+		float _angle;
+		float _distance;
+		int _viewPlaneWidth;
+		int _viewPlaneHeight;
+		float _pixelSize;
 };
+std::ostream& operator <<( std::ostream &out, const Camera &c );
 #endif

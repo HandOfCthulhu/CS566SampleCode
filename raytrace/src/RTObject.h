@@ -15,7 +15,7 @@
 
 class RTObject {
 public:
-	virtual Hit intersect(Ray r) = 0;
+	virtual Hit intersect(Ray r, float minDepth) = 0;
 	virtual void setMaterial(Material mat) = 0;
 	virtual Material getMaterial() = 0;
 	virtual void write( std::ostream &out ) const = 0;

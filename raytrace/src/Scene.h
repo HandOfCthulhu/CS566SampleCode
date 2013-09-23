@@ -130,7 +130,6 @@ class Scene{
 		void parseLights();
 		void parsePointLight();
 		void parseDirectionalLight();
-
 };
 
 std::ostream& operator <<( std::ostream &out, const Scene &s );

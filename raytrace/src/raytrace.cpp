@@ -43,6 +43,9 @@
 
 Scene *gTheScene;
 string gProgramName;
+static const double epsilon = 1.0E-4;
+static const int MAX_RECURSION_DEPTH = 3;
+static const int DEPTH_IMAGE_MAX_SCALE = 20;
 
 void usage( string message = "" ){
 	cerr << message << endl;
@@ -111,6 +114,7 @@ int main( int argc, char **argv ){
 		cout << *gTheScene << endl;
 		Image depth = Image(gTheScene->camera().numPxWidth(), gTheScene->camera().numPxHeight());
 		Image output = Image(gTheScene->camera().numPxWidth(), gTheScene->camera().numPxHeight());
+		float pxDepth = 0.0;
 		Hit h;
 		int x=0, y=0;
 		while(!(gTheScene->camera().isDone()))
@@ -118,15 +122,21 @@ int main( int argc, char **argv ){
 			x=gTheScene->camera().getLastX();
 			y=gTheScene->camera().getLastY();
 			cout << "(" << x << ", " << y << ")" << endl;
-			h = gTheScene->group().intersect(gTheScene->camera().getNextRay());
+			h = gTheScene->group().intersect(gTheScene->camera().getNextRay(), 0, MAX_RECURSION_DEPTH);
 			if (h.didHit()) {
+				pxDepth = 1-(h.getDepth()/DEPTH_IMAGE_MAX_SCALE);
+				if (pxDepth < 0) {
+					pxDepth = 0.0;
+				} else if (pxDepth > 1) {
+					pxDepth = 1.0;
+				}
 				cout << "Depth" << endl;
-				depth(x, y) = Pixel(Vector3d(h.getDepth(), h.getDepth(), h.getDepth()));
+				depth(x, y) = Pixel(Vector3d(pxDepth, pxDepth, pxDepth));
 				cout << "out" << endl;
 				output(x,y) = Pixel(Vector3d(h.getColor()));
 			} else {
 				cout << "Depth=BG" << endl;
-				depth(x, y) = gTheScene->backgroundColor();
+				depth(x, y) = Pixel(0,0,0);
 				cout << "OUT=BG" << endl;
 				output(x, y) = gTheScene->backgroundColor();
 			}

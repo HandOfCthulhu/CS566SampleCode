@@ -22,13 +22,20 @@ void Plane::write( std::ostream &out ) const{
 }
 
 Plane::Plane(Vector3d normal, float displacement, Material material) {
-	_normal = normal;
+	_normal = normal.normalized();
 	_displace = displacement;
 	_m = material;
 }
 
-Hit Plane::intersect(Ray r) {
+Hit Plane::intersect(Ray r, float minDepth) {
 	Hit h = Hit();
+	//double t = dot (p.a-r.o, p.n) / dot(r.d, p.n);
+	Vector3d p0 = _normal.scalarProduct(_displace);
+	float t = _normal.dotProduct(p0.plus(r.getOrigin().negative()));
+	t = t / (r.getDirection().dotProduct(_normal));
+	if (t > 0.0 && ((t < minDepth) || (minDepth < 0))) {
+		h.hit(true, t, r.getOrigin().plus(r.getDirection().scalarProduct(t)), r.getDirection(), _normal, _m);
+	}
 	return h;
 }
 

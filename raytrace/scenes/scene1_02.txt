@@ -8,7 +8,7 @@ OrthographicCamera {
 ViewPlane {
     width 5
     height 5
-    pixelsize 1
+    pixelsize 0.01
 }
 
 Background { color 0.1 0.1 0.1 }

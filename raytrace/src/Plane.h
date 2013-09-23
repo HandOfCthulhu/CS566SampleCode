@@ -18,7 +18,7 @@ class Plane : public RTObject {
 	public:
 		Plane();
 		Plane(Vector3d normal, float displacement, Material material);
-		Hit intersect(Ray r);
+		Hit intersect(Ray r, float minDepth);
 		void setMaterial(Material mat);
 		Material getMaterial();
 		void write( std::ostream &out ) const;

@@ -16,7 +16,7 @@
 class Triangle : public RTObject {
 	public:
 		Triangle(Vector3d a, Vector3d b, Vector3d c, Material m);
-		Hit intersect(Ray r);
+		Hit intersect(Ray r, float minDepth);
 		void setMaterial(Material mat);
 		Material getMaterial();
 		void write( std::ostream &out ) const;

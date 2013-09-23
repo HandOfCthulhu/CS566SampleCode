@@ -39,21 +39,26 @@
 #include "Ray.h"
 #include "Hit.h"
 #include "RTObject.h"
+#include "Light.h"
 
 #ifndef _GROUP_H_
 #define _GROUP_H_
-
 
 class Group{
 	public:
 		Group( );
 		void addObject(RTObject* obj);
-		Hit intersect(Ray r);
+		void addLight(Light light);
+		Hit intersect(Ray r, int recDepth, int maxDepth);
 		void write( std::ostream &out ) const;
+		int getNumberOfObjects();
+		int getNumberOfLights();
+		void setBGColor(Vector3d color);
 		~Group( );
 	private:
-		int _numObjects;
 		std::vector<RTObject*> _objects;
+		std::vector<Light> _lights;
+		Vector3d _bgColor;
 };
 std::ostream& operator <<( std::ostream &out, const Group &g );
 #endif

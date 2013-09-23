@@ -259,6 +259,7 @@ void Scene::parseBackground( ){
 		vec[i] = parseFloat( );
 	}
 	myBackgroundColor = Pixel(vec);
+	myGroup.setBGColor(Vector3d(vec));
 	nextToken( );
 	checkToken( "}", "Background" );
 }
@@ -345,10 +346,6 @@ void Scene::parseGroup( ) {
 	checkToken("numObjects", "Group");
 	nextToken();
 	myNumberOfObjects = parseInt( );
-	//nextToken();
-	//checkToken("MaterialIndex", "Group");
-	//nextToken();
-	//setCurrentMaterial(parseInt());
 	int i = 0;
 	while (i < myNumberOfObjects) {
 		nextToken();
@@ -676,6 +673,7 @@ void Scene::parseTransform() {
 void Scene::parseSimplePerspectiveCamera() {
 	float vec[3];
 	checkToken("SimplePerspectiveCamera", "SimplePerspectiveCamera");
+	myCamera.setMode(simple);
 	nextToken();
 	checkToken("{", "SimplePerspectiveCamera");
 	nextToken();
@@ -709,7 +707,8 @@ void Scene::parseSimplePerspectiveCamera() {
 
 void Scene::parsePerspectiveCamera() {
 	float vec[3];
-	checkToken("SimplePerspectiveCamera", "PerspectiveCamera");
+	checkToken("PerspectiveCamera", "PerspectiveCamera");
+	myCamera.setMode(perspective);
 	nextToken();
 	checkToken("{", "PerspectiveCamera");
 	nextToken();
@@ -743,6 +742,7 @@ void Scene::parsePerspectiveCamera() {
 
 void Scene::parseLights() {
 	//do nothing for now
+	myGroup.addLight(Light(myCamera.getPosition(), Vector3d(1.0,1.0,1.0)));
 }
 
 void Scene::parsePointLight() {

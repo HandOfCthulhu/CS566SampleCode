@@ -25,7 +25,7 @@ class Sphere : public RTObject {
 		void setPosition(Vector3d position);
 		void setRadius(float radius);
 		void setMaterial(Material material);
-		Hit intersect(Ray r);
+		Hit intersect(Ray r, float minDepth);
 		void write( std::ostream &out ) const;
 	private:
 		Vector3d _pos;

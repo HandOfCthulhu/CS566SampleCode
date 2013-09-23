@@ -58,17 +58,11 @@ public:
   Pixel( ) { r = 0; g = 0; b = 0; };
   Pixel( channel _r, channel _g, channel _b ) { r = _r; g = _g; b = _b; };
   Pixel( float vector[3]) { 
-	  //std::cout << "vec[0] " << vector[0] << std::endl;
-	  r = (channel) (255*vector[0]); 
-	 // std::cout << "r:" << (int)(r) << std::endl;
-	  //std::cout << "vec[1] " << vector[1] << std::endl;
-	  g = (channel) (255*vector[1]); 
-	  //std::cout << "g:" << (int)g << std::endl;
-	  //std::cout << "vec[2] " << vector[2] << std::endl;
-	  b = (channel)(255*vector[2]); 
-	  //std::cout << "b:" << (int)b << std::endl;
+	  r = (255*vector[0]); 
+	  g = (255*vector[1]); 
+	  b = (255*vector[2]); 
 	  };
-  Pixel( Vector3d vector) { r=(channel)(255*vector.getX()); g=(channel)(255*vector.getY()); b=(channel)(255*vector.getZ()); };
+  Pixel( Vector3d vector) { r=(255*vector.getX()); g=(255*vector.getY()); b=(255*vector.getZ()); };
   void write( std::ostream &out ) const{
     out << "[" << (int)r << ", " << (int)g << ", " << (int)b <<", " << "]";
   };

@@ -153,6 +153,7 @@ void Camera::setPixelSize(float pxSize) {
 Ray Camera::getNextRay() {
 	Vector3d origin = calcRayBase(_x, _y);
 	Vector3d dir;
+	std::cout << "Creating ray for (" << _x << ", " << _y << "):";
 	_x = _x + 1;
 	if ( _x >= _pxWidth ) {
 		_x = 0;
@@ -176,14 +177,15 @@ Ray Camera::getNextRay() {
 			dir = _direction;
 			break;
 	}
+	std::cout << " o(" << origin.getX() << ", " << origin.getY() << ", " << origin.getZ() << ") dir(" << dir.getX() << ", " << dir.getY() << ", " << dir.getZ() << ")" << std::endl;
 	return(Ray(origin, dir));
 }
 
 Vector3d Camera::calcRayBase(int x, int y) {
-	Vector3d horizontal = _right.scalarProduct((float)((-0.5 *_viewPlaneWidth) + (x * _pixelSize)));
-	Vector3d vertical = _up.scalarProduct((float)((0.5*_viewPlaneHeight)+(y*_pixelSize)));
+	Vector3d horizontal = _right.scalarProduct((float)((-0.5 *(_viewPlaneWidth)) + (x * _pixelSize)));
+	Vector3d vertical = _up.scalarProduct((float)((0.5*(_viewPlaneHeight)) - (y * _pixelSize)));
 
-	return(horizontal.plus(vertical));
+	return(_position.plus(horizontal.plus(vertical)));
 }
 
 int Camera::numPxWidth() {

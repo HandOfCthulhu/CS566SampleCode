@@ -28,11 +28,13 @@ Vector3d::Vector3d(float vec[3]) {
 }
 
 float Vector3d::dotProduct(Vector3d operand) {
-	return (_x*operand.getX() + _y*operand.getY() + _z*operand.getZ());
+	return ((_x*operand.getX()) + (_y*operand.getY()) + (_z*operand.getZ()));
 }
 
 Vector3d Vector3d::crossProduct(Vector3d operand) {
-	Vector3d ret(0.0,0.0,0.0);
+	Vector3d ret(((_y*operand.getZ())-(_z*operand.getY())),
+				 ((_z*operand.getX())-(_x*operand.getZ())),
+				 ((_x*operand.getY())-(_y*operand.getX())));
 	return ret;
 }
 
@@ -63,14 +65,21 @@ void Vector3d::setZ(float z) {
 
 void Vector3d::normalize() {
 	float len = getLength();
-	_x = _x/len;
-	_y = _y/len;
-	_z = _z/len;
+	if(len > 0) {
+		_x = _x/len;
+		_y = _y/len;
+		_z = _z/len;
+	}
 }
 
 Vector3d Vector3d::normalized() {
 	float len = getLength();
-	Vector3d ret(_x = _x/len, _y = _y/len, _z = _z/len);
+	Vector3d ret;
+	if(len > 0) {
+		ret = Vector3d(_x = _x/len, _y = _y/len, _z = _z/len);
+	} else {
+		ret = *this;
+	}
 	return ret;
 }
 

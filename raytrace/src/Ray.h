@@ -40,17 +40,22 @@
 #define _RAY_H_
 #include "Vector3d.h"
 
+enum RayType {primary, shadow, reflection};
+
 class Ray{
 	public:
-		Ray(void) {_o = Vector3d(); _d = Vector3d(); };
-		Ray(Vector3d origin, Vector3d direction) { _o = origin; _d = direction.normalized(); };
+		Ray(void) {_o = Vector3d(); _d = Vector3d(); _mode=primary;};
+		Ray(Vector3d origin, Vector3d direction) { _o = origin; _d = direction.normalized(); _mode=primary; };
 		Vector3d getOrigin() { return (_o); };
 		Vector3d getDirection() { return (_d); };
+		RayType getType() { return(_mode); };
+		void setType(RayType type) { _mode = type; };
 		void setOrigin(Vector3d origin) { _o = origin; };
 		void setDirection(Vector3d direction) { _d = direction.normalized(); };
 		~Ray(void){};
 	private:
 		Vector3d _o;
 		Vector3d _d;
+		RayType _mode;
 };
 #endif

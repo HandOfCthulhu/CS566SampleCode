@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Abstract class describing all possible objects for ray intercepts
  */
 #include "Ray.h"
 #include "Hit.h"

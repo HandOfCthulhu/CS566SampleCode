@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Object describing the ouput image and code to write the images to files.
  */
 /*
  * Copyright (c) 2005-2013 Michael Shafae
@@ -46,6 +46,7 @@
 #include <cstdio>
 #include <iostream>
 #include "Vector3d.h"
+#include "Color.h"
 
 #ifndef _IMAGE_H_
 #define _IMAGE_H_
@@ -54,21 +55,25 @@
 typedef unsigned char channel;  
 
 class Pixel {
-public:
-  Pixel( ) { r = 0; g = 0; b = 0; };
-  Pixel( channel _r, channel _g, channel _b ) { r = _r; g = _g; b = _b; };
-  Pixel( float vector[3]) { 
-	  r = (255*vector[0]); 
-	  g = (255*vector[1]); 
-	  b = (255*vector[2]); 
-	  };
-  Pixel( Vector3d vector) { r=(255*vector.getX()); g=(255*vector.getY()); b=(255*vector.getZ()); };
-  void write( std::ostream &out ) const{
-    out << "[" << (int)r << ", " << (int)g << ", " << (int)b <<", " << "]";
-  };
-  channel r;
-  channel g;
-  channel b;
+	public:
+		Pixel( ) { r = 0; g = 0; b = 0; };
+		Pixel( channel _r, channel _g, channel _b ) { r = _r; g = _g; b = _b; };
+		Pixel( float vector[3]) { 
+			r = (unsigned char)(255*vector[0]); 
+			g = (unsigned char)(255*vector[1]); 
+			b = (unsigned char)(255*vector[2]); 
+		};
+		Pixel( Color c) {
+			r=(unsigned char)(255*c.getR());
+			g=(unsigned char)(255*c.getG());
+			b=(unsigned char)(255*c.getB()); 
+		};
+		void write( std::ostream &out ) const {
+			out << "[" << (int)r << ", " << (int)g << ", " << (int)b <<", " << "]";
+		};
+		channel r;
+		channel g;
+		channel b;
 };
 
 std::ostream& operator <<( std::ostream &out, const Pixel &p );
@@ -83,6 +88,7 @@ public:
   Pixel *pixels;
   int    width;
   int    height;
+  bool debugMode;
 };
 
 

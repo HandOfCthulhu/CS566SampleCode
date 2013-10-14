@@ -1,24 +1,32 @@
+/* Gregory Parsons
+ * gnparsons@gmail.com
+ * CS 566
+ * September 2013
+ *
+ * This class just stores the light information for use in shading code
+ */
 #include "Light.h"
+#include "Point.h"
 
 Light::Light() {
-	_mode = point;
-	_pos = Vector3d();
+	_mode = Point;
+	_pos = Point3d();
 	_dir = Vector3d();
-	_color = Vector3d();
+	_color = Color();
 	_angle = 0.0;
-	_att = Vector3d();
+	_att = Vector3d(1,0,0);
 }
 
-Light::Light(Vector3d position, Vector3d color) {
-	_mode = point;
+Light::Light(Point3d position, Color color, Vector3d attenuation) {
+	_mode = Point;
 	_pos = position;
 	_color = color;
 	_dir = Vector3d();
 	_angle = 0.0;
-	_att = Vector3d();
+	_att = attenuation;
 }
 
-Light::Light(Vector3d position, Vector3d direction, Vector3d color, float angle, Vector3d attenuation) {
+Light::Light(Point3d position, Vector3d direction, Color color, float angle, Vector3d attenuation) {
 	_mode = directional;
 	_pos = position;
 	_dir = direction;
@@ -27,7 +35,7 @@ Light::Light(Vector3d position, Vector3d direction, Vector3d color, float angle,
 	_att = attenuation;
 }
 
-Vector3d Light::getPosition() {
+Point3d Light::getPosition() {
 	return(_pos);
 }
 
@@ -35,7 +43,7 @@ Vector3d Light::getDirection() {
 	return(_dir);
 }
 
-Vector3d Light::getColor() {
+Color Light::getColor() {
 	return(_color);
 }
 
@@ -51,7 +59,7 @@ LightMode Light::getMode() {
 	return(_mode);
 }
 
-void Light::setposition(Vector3d position) {
+void Light::setposition(Point3d position) {
 	_pos = position;
 }
 
@@ -59,7 +67,7 @@ void Light::setDirection(Vector3d direction) {
 	_dir = direction;
 }
 
-void Light::setColor(Vector3d color) {
+void Light::setColor(Color color) {
 	_color = color;
 }
 

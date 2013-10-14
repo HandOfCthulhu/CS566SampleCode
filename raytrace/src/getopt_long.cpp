@@ -441,7 +441,7 @@ getopt_internal(int nargc, char * const *nargv, const char *options,
 	if (optreset)
 		nonopt_start = nonopt_end = -1;
 start:
-	if (optreset || !*place) {		/* update scanning pointer */
+	if (optreset || !*place) {		/* update scanning Point3der */
 		optreset = 0;
 		if (optind >= nargc) {          /* end of argument vector */
 			place = EMSG;

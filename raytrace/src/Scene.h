@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 484
  * September 2013
- *
+ * Class is used to parse the scene files and set up all other objects
  */
 /*
  * Copyright (c) 2005-2013 Michael Shafae
@@ -54,6 +54,8 @@ using namespace std;
 
 class Scene{
 	public:
+		bool debugMode;
+
 		Scene( string inputFilename = "", string outputFilename = "", string depthFilename = "" );
 		~Scene( );
 

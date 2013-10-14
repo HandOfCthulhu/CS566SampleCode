@@ -3,6 +3,7 @@
  * CS 566
  * September 2013
  *
+ * This class just stores the material information for use in objects and retrieval during the intersection shading code
  */
 
 #include "Material.h"
@@ -10,16 +11,16 @@
 #include <iostream>
 
 Material::Material( ) {
-	_diffColor = Vector3d();
-	_specColor = Vector3d();
-	_reflectColor = Vector3d();
-	_transColor = Vector3d();
+	_diffColor = Color();
+	_specColor = Color();
+	_reflectColor = Color();
+	_transColor = Color();
 	_exponent = 0.0;
 	_indxRefract = 0.0;
 
 }
 
-Material::Material(Vector3d diffuseColor, float specularExponent, Vector3d specColor, Vector3d reflecColor, Vector3d transColor, float refractInd) {
+Material::Material(Color diffuseColor, float specularExponent, Color specColor, Color reflecColor, Color transColor, float refractInd) {
 		_diffColor = diffuseColor;
 		_exponent = specularExponent;
 		_specColor = specColor;
@@ -28,7 +29,7 @@ Material::Material(Vector3d diffuseColor, float specularExponent, Vector3d specC
 		_indxRefract = refractInd;
 }
 
-void Material::setSpecularColor(Vector3d color) {
+void Material::setSpecularColor(Color color) {
 	_specColor = color;
 }
 
@@ -44,11 +45,11 @@ float Material::getSpecularExponent(){
 	return(_exponent);
 }
 
-void Material::setDiffColor(Vector3d color) {
+void Material::setDiffColor(Color color) {
 	_diffColor = color;
 }
 
-void Material::setReflectiveColor(Vector3d color) {
+void Material::setReflectiveColor(Color color) {
 	_reflectColor = color;
 }
 
@@ -56,23 +57,23 @@ void Material::setRefractionIndex(float refractInd) {
 	_indxRefract = refractInd;
 }
 
-void Material::setTransparencyColor(Vector3d color) {
+void Material::setTransparencyColor(Color color) {
 	_transColor = color;
 }
 
-Vector3d Material::getDiffuseColor() {
+Color Material::getDiffuseColor() {
 	return(_diffColor);
 }
 
-Vector3d Material::getSpecularColor() {
+Color Material::getSpecularColor() {
 	return(_specColor);
 }
 
-Vector3d Material::getReflectiveColor() {
+Color Material::getReflectiveColor() {
 	return(_reflectColor);
 }
 
-Vector3d Material::getTransparencyColor() {
+Color Material::getTransparencyColor() {
 	return(_transColor);
 }
 
@@ -86,7 +87,7 @@ void Material::write( std::ostream &out ) const {
 	out << "\tdiffColor: " << _diffColor << std::endl;
 	out << "\tspecColor: " << _specColor << std::endl;
 	out << "\ttransColor: " << _transColor << std::endl;
-	out << "\treflectColor: " << _transColor << std::endl;
+	out << "\treflectColor: " << _reflectColor << std::endl;
 	out << "\texp: " << _exponent << std::endl;
 	out << "\tindRefract: " << _indxRefract << std::endl;
 }

@@ -52,8 +52,8 @@ typedef unsigned int uint;
 typedef unsigned char uchar;
 
 
-#define DELETEIFNOTNULL(pointer){ \
-  if (pointer){ delete pointer; pointer = 0;} \
+#define DELETEIFNOTNULL(Point3der){ \
+  if (Point3der){ delete Point3der; Point3der = 0;} \
 }
 
 #define fopen_error(fname) { \

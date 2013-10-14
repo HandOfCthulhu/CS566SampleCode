@@ -3,6 +3,7 @@
  * CS 566
  * September 2013
  *
+ * This class just stores the material information for use in objects and retrieval during the intersection shading code
  */
 /*
  * Copyright (c) 2005-2013 Michael Shafae
@@ -39,35 +40,38 @@
 #ifndef _PHONG_MATERIAL_H_
 #define _PHONG_MATERIAL_H_
 #include "Vector3d.h"
+#include "Color.h"
 
 class Material{
 	public:
 		Material( );
-		Material(Vector3d color, float exponent, Vector3d specColor, Vector3d reflecColor, Vector3d transColor, float refractInd);
+		Material(Color color, float exponent, Color specColor, Color reflecColor, Color transColor, float refractInd);
 		
-		void setDiffColor(Vector3d color);
-		void setReflectiveColor(Vector3d color);
-		void setTransparencyColor(Vector3d color);
-		void setSpecularColor(Vector3d color);
+		void setDiffColor(Color color);
+		void setReflectiveColor(Color color);
+		void setTransparencyColor(Color color);
+		void setSpecularColor(Color color);
 
 		void setExponent(float exp);
 		void setRefractionIndex(float refractInd);
 		
-		Vector3d getDiffuseColor();
-		Vector3d getReflectiveColor();
-		Vector3d getTransparencyColor();
-		Vector3d getSpecularColor();
+		Color getDiffuseColor();
+		Color getReflectiveColor();
+		Color getTransparencyColor();
+		Color getSpecularColor();
 		float getIndexOfRefraction();
 		float getSpecularExponent();
 
 		void write( std::ostream &out ) const;
 
+		bool debugMode;
+
 		~Material( );
 	private:
-		Vector3d _diffColor;
-		Vector3d _specColor;
-		Vector3d _transColor;
-		Vector3d _reflectColor;
+		Color _diffColor;
+		Color _specColor;
+		Color _transColor;
+		Color _reflectColor;
 		float _exponent;
 		float _indxRefract;
 };

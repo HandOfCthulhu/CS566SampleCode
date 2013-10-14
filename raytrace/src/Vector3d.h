@@ -2,17 +2,20 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Object describing a 1x3 matrix (vector) and all mathematic operations to be done with them.
  */
 
 #ifndef _VECTOR3D_H_
 #define _VECTOR3D_H_
 #include <iostream>
+#include "Point.h"
+
 class Vector3d	{
 	public:
 		Vector3d(void);
 		Vector3d(float x, float y, float z);
 		Vector3d(float vec[3]);
+		Vector3d(Point3d head, Point3d tail);
 		float dotProduct(Vector3d operand);
 		Vector3d crossProduct(Vector3d operand);
 		Vector3d scalarProduct(float scalar);
@@ -30,6 +33,9 @@ class Vector3d	{
 		void write( std::ostream &out ) const;
 
 		Vector3d normalized();
+
+		bool debugMode;
+
 		~Vector3d(void);
 	private:
 		float _x;

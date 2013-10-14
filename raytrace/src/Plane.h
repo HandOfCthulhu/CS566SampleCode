@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Object describing a plane in the scene
  */
 
 #ifndef _PLANE_H_
@@ -22,6 +22,8 @@ class Plane : public RTObject {
 		void setMaterial(Material mat);
 		Material getMaterial();
 		void write( std::ostream &out ) const;
+
+		bool debugMode;
 	private:
 		Vector3d _normal;
 		float _displace;

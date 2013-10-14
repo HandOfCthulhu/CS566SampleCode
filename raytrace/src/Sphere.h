@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Object describing a sphere
  */
 
 
@@ -13,22 +13,24 @@
 #include "RTObject.h"
 #include "Hit.h"
 #include "Ray.h"
+#include "Point.h"
 #include <iostream>
 
 class Sphere : public RTObject {
 	public:
 		Sphere();
-		Sphere(Vector3d position, float radius, Material mat);
-		Vector3d getPosition();
+		Sphere(Point3d position, float radius, Material mat);
+		Point3d getPosition();
 		float getRadius();
 		Material getMaterial();
-		void setPosition(Vector3d position);
+		void setPosition(Point3d position);
 		void setRadius(float radius);
 		void setMaterial(Material material);
 		Hit intersect(Ray r, float minDepth);
 		void write( std::ostream &out ) const;
+		bool debugMode;
 	private:
-		Vector3d _pos;
+		Point3d _pos;
 		float _rad;
 		Material _mat;
 };

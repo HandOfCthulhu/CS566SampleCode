@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Object describing a 1x3 matrix (vector) and all mathematic operations to be done with them.
  */
 
 #include "Vector3d.h"
@@ -25,6 +25,12 @@ Vector3d::Vector3d(float vec[3]) {
 	_x = vec[0];
 	_y = vec[1];
 	_z = vec[2];
+}
+
+Vector3d::Vector3d(Point3d head, Point3d tail) {
+	_x = head.getX() - tail.getX();
+	_y = head.getY() - tail.getY();
+	_z = head.getZ() - tail.getZ();
 }
 
 float Vector3d::dotProduct(Vector3d operand) {
@@ -84,7 +90,7 @@ Vector3d Vector3d::normalized() {
 }
 
 float Vector3d::getLength() {
-	return(sqrt(_x*_x+_y*_y+_z*_z));
+	return(sqrt((_x*_x)+(_y*_y)+(_z*_z)));
 }
 
 Vector3d Vector3d::plus(Vector3d operand) {

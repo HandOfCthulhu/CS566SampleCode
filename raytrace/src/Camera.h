@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Used to generate the rays for intercepts.
  */
 /*
  * Copyright (c) 2005-2013 Michael Shafae
@@ -46,7 +46,7 @@ enum CameraMode {orthographic, perspective, simple};
 class Camera{
 	public:
 		Camera( );
-		Camera(CameraMode mode, Vector3d position, Vector3d up, Vector3d direction);
+		Camera(CameraMode mode, Point3d position, Vector3d up, Vector3d direction);
 		~Camera( ){};
 
 		Ray getNextRay();
@@ -57,7 +57,7 @@ class Camera{
 		bool isDone();
 
 		CameraMode getMode();
-		Vector3d getPosition();
+		Point3d getPosition();
 		Vector3d getDirection();
 		Vector3d getUpVector();
 		float getAngle();
@@ -67,7 +67,7 @@ class Camera{
 		float getPixelSize();
 
 		void setMode(CameraMode mode);
-		void setPosition(Vector3d pos);
+		void setPosition(Point3d pos);
 		void setDirection(Vector3d dir);
 		void setUpVector(Vector3d up);
 		void setAngle(float angle);
@@ -78,8 +78,10 @@ class Camera{
 
 		void write( std::ostream &out ) const;
 
+		bool debugMode;
+
 	private:
-		Vector3d calcRayBase(int x, int y);
+		Point3d calcRayBase(int x, int y);
 		int _x;
 		int _y;
 		int _pxWidth;
@@ -87,7 +89,7 @@ class Camera{
 		bool done;
 
 		CameraMode _mode;
-		Vector3d _position;
+		Point3d _position;
 		Vector3d _direction;
 		Vector3d _up;
 

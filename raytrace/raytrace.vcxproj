@@ -41,7 +41,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
@@ -66,6 +66,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\getopt.h" />
     <ClInclude Include="src\Group.h" />
@@ -74,6 +75,7 @@
     <ClInclude Include="src\Light.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Plane.h" />
+    <ClInclude Include="src\Point.h" />
     <ClInclude Include="src\Ray.h" />
     <ClInclude Include="src\RTObject.h" />
     <ClInclude Include="src\Scene.h" />
@@ -83,12 +85,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Color.cpp" />
     <ClCompile Include="src\getopt_long.cpp" />
     <ClCompile Include="src\Group.cpp" />
     <ClCompile Include="src\Image.cpp" />
     <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\Plane.cpp" />
+    <ClCompile Include="src\Point.cpp" />
     <ClCompile Include="src\raytrace.cpp" />
     <ClCompile Include="src\RTObject.cpp" />
     <ClCompile Include="src\Scene.cpp" />

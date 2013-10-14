@@ -2,6 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
+ * Used to generate the rays for intercepts.
  */
 /*
  * Copyright (c) 2005-2013 Michael Shafae
@@ -45,7 +46,7 @@ Camera::Camera(void) {
 	_y = 0;
 	_pxWidth = 0;
 	_pxHeight = 0;
-	_position = Vector3d();
+	_position = Point3d();
 	_up = Vector3d();
 	_distance = 0.0;
 	_viewPlaneWidth = 0;
@@ -54,7 +55,7 @@ Camera::Camera(void) {
 	done = false;
 }
 
-Camera::Camera(CameraMode mode, Vector3d location, Vector3d up, Vector3d direction) {
+Camera::Camera(CameraMode mode, Point3d location, Vector3d up, Vector3d direction) {
 	_mode = mode;
 	_position = location;
 	_direction = direction;
@@ -76,7 +77,7 @@ CameraMode Camera::getMode() {
 	return(_mode);
 }
 
-Vector3d Camera::getPosition() {
+Point3d Camera::getPosition() {
 	return(_position);
 }
 
@@ -92,17 +93,19 @@ void Camera::setMode(CameraMode mode) {
 	_mode = mode;
 }
 
-void Camera::setPosition(Vector3d pos) {
+void Camera::setPosition(Point3d pos) {
 	_position = pos;
 }
 
 void Camera::setDirection(Vector3d dir) {
 	_direction = dir;
+	//Always keep our right vector up to date
 	_right = _up.crossProduct(_direction).normalized();
 }
 
 void Camera::setUpVector(Vector3d up) {
 	_up = up;
+	//Always keep our right vector up to date
 	_right = _up.crossProduct(_direction).normalized();
 }
 
@@ -151,9 +154,35 @@ void Camera::setPixelSize(float pxSize) {
 }
 
 Ray Camera::getNextRay() {
-	Vector3d origin = calcRayBase(_x, _y);
+	Point3d origin;
 	Vector3d dir;
-	std::cout << "Creating ray for (" << _x << ", " << _y << "):";
+	Vector3d temp;
+	if (debugMode) {
+		std::cout << "Creating ray for (" << _x << ", " << _y << "):";
+	}
+	origin = calcRayBase(_x, _y);
+	
+	switch(_mode)
+	{
+		case(orthographic):
+			//origin = calcRayBase(_x, _y);
+			dir = _direction;
+			break;
+		case(perspective):
+			//origin = _position;
+			temp = _direction.scalarProduct(_distance);
+			dir = Vector3d(origin.translate(temp.getX(), temp.getY(), temp.getZ()), _position).normalized();
+			break;
+		case(simple):
+			//origin = _position;
+			temp = _direction.scalarProduct(_distance);
+			dir = Vector3d(origin.translate(temp.getX(), temp.getY(), temp.getZ()), _position).normalized();
+			break;
+		default:
+			//origin = calcRayBase(_x, _y);
+			dir = _direction;
+			break;
+	}
 	_x = _x + 1;
 	if ( _x >= _pxWidth ) {
 		_x = 0;
@@ -162,30 +191,17 @@ Ray Camera::getNextRay() {
 	if(_y >= _pxHeight ) {
 		done = true;
 	}
-	switch(_mode)
-	{
-		case(orthographic):
-			dir = _direction;
-			break;
-		case(perspective):
-			dir = origin.plus(_direction.scalarProduct(_distance)).plus(_position.negative()).normalized();			
-			break;
-		case(simple):
-			dir = origin.plus(_direction.scalarProduct(_distance)).plus(_position.negative()).normalized();			
-			break;
-		default:
-			dir = _direction;
-			break;
+	if (debugMode) {
+		std::cout << " o(" << origin.getX() << ", " << origin.getY() << ", " << origin.getZ() << ") dir(" << dir.getX() << ", " << dir.getY() << ", " << dir.getZ() << ")" << std::endl;
 	}
-	std::cout << " o(" << origin.getX() << ", " << origin.getY() << ", " << origin.getZ() << ") dir(" << dir.getX() << ", " << dir.getY() << ", " << dir.getZ() << ")" << std::endl;
 	return(Ray(origin, dir));
 }
 
-Vector3d Camera::calcRayBase(int x, int y) {
-	Vector3d horizontal = _right.scalarProduct((float)((-0.5 *(_viewPlaneWidth)) + (x * _pixelSize)));
-	Vector3d vertical = _up.scalarProduct((float)((0.5*(_viewPlaneHeight)) - (y * _pixelSize)));
-
-	return(_position.plus(horizontal.plus(vertical)));
+Point3d Camera::calcRayBase(int x, int y) {
+	Vector3d horizontal = _right.scalarProduct((float)((-0.5 *(_viewPlaneWidth)) + ((x+0.5) * _pixelSize)));
+	Vector3d vertical = _up.scalarProduct((float)((0.5*(_viewPlaneHeight)) - ((y+0.5) * _pixelSize)));
+	Vector3d temp = horizontal.plus(vertical);
+	return(_position.translate(temp.getX(), temp.getY(), temp.getZ()));
 }
 
 int Camera::numPxWidth() {

@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Group of objects, also includes interception checks and shading
  */
 /*
  * Copyright (c) 2005-2013 Michael Shafae
@@ -54,6 +54,9 @@ class Group{
 		int getNumberOfObjects();
 		int getNumberOfLights();
 		void setBGColor(Vector3d color);
+
+		bool debugMode;
+
 		~Group( );
 	private:
 		std::vector<RTObject*> _objects;

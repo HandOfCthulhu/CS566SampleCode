@@ -2,7 +2,7 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * The main process
  */
 /*
  * Copyright (c) 2005-2013 Michael Shafae
@@ -44,7 +44,7 @@
 Scene *gTheScene;
 string gProgramName;
 static const double epsilon = 1.0E-4;
-static const int MAX_RECURSION_DEPTH = 3;
+static const int MAX_RECURSION_DEPTH = 4;
 static const int DEPTH_IMAGE_MAX_SCALE = 20;
 
 void usage( string message = "" ){
@@ -58,7 +58,8 @@ void usage( string message = "" ){
 void parseCommandLine( int argc, char **argv ){
 	int ch;
 	string inputFile( "" ), outputFile( "" ), depthFile( "" );
-  int resolution;
+	int resolution;
+	bool debugMode = false;
 	static struct option longopts[] = {
     { "input", required_argument, NULL, 'i' },
     { "output", required_argument, NULL, 'o' },
@@ -87,7 +88,7 @@ void parseCommandLine( int argc, char **argv ){
         resolution = atoi(optarg);
         break;
       case 'v':
-        // set your flag here.
+        debugMode = true;
         break;
       case 'h':
         usage( );
@@ -98,6 +99,7 @@ void parseCommandLine( int argc, char **argv ){
 		}
 	}
 	gTheScene = new Scene( inputFile, outputFile, depthFile );
+	gTheScene->debugMode = debugMode;
 }
 
 int main( int argc, char **argv ){
@@ -121,7 +123,9 @@ int main( int argc, char **argv ){
 		{
 			x=gTheScene->camera().getLastX();
 			y=gTheScene->camera().getLastY();
-			cout << "(" << x << ", " << y << ")" << endl;
+			if (gTheScene->debugMode) {
+				cout << "(" << x << ", " << y << ")" << endl;
+			}
 			h = gTheScene->group().intersect(gTheScene->camera().getNextRay(), 0, MAX_RECURSION_DEPTH);
 			if (h.didHit()) {
 				pxDepth = 1-(h.getDepth()/DEPTH_IMAGE_MAX_SCALE);
@@ -130,22 +134,27 @@ int main( int argc, char **argv ){
 				} else if (pxDepth > 1) {
 					pxDepth = 1.0;
 				}
-				cout << "Depth" << endl;
-				depth(x, y) = Pixel(Vector3d(pxDepth, pxDepth, pxDepth));
-				cout << "out" << endl;
-				output(x,y) = Pixel(Vector3d(h.getColor()));
+				depth(y, x) = Pixel(Color(pxDepth, pxDepth, pxDepth));
+				output(y, x) = Pixel(h.getColor());
 			} else {
-				cout << "Depth=BG" << endl;
-				depth(x, y) = Pixel(0,0,0);
-				cout << "OUT=BG" << endl;
-				output(x, y) = gTheScene->backgroundColor();
+				if (gTheScene->debugMode) {
+					cout << "No Hit" << endl;
+				}
+				depth(y, x) = Pixel(0,0,0);
+				output(y, x) = gTheScene->backgroundColor();
 			}
 		}
-		cout << "Writing Depth File" << endl;
+		if (gTheScene->debugMode) {
+			cout << "Writing Depth File" << endl;
+		}
 		depth.write(gTheScene->depthFile().c_str());
-		cout << "Writing Output File" << endl;
+		if (gTheScene->debugMode) {
+			cout << "Writing Output File" << endl;
+		}
 		output.write(gTheScene->outputFile().c_str());
-		cout << "Wrote Both Files" << endl;
+		if (gTheScene->debugMode) {
+			cout << "Wrote Both Files" << endl;
+		}
 	}else{
 		usage( "You specify an input scene file, an output file and a depth file." );
 	}

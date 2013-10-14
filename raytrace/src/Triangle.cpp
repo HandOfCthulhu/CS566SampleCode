@@ -2,13 +2,14 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
- *
+ * Object describing a triangle in the scene
  */
 
 #include "Triangle.h"
 #include <iostream>
+#include "Point.h"
 
-Triangle::Triangle(Vector3d a, Vector3d b, Vector3d c, Material m) {
+Triangle::Triangle(Point3d a, Point3d b, Point3d c, Material m) {
 	_a = a;
 	_b = b;
 	_c = c;
@@ -16,10 +17,10 @@ Triangle::Triangle(Vector3d a, Vector3d b, Vector3d c, Material m) {
 }
 
 Hit Triangle::intersect(Ray r, float minDepth) {
-	Hit h = Hit();
+	Hit h;
 
-	Vector3d E1= _b.plus(_a.negative());
-	Vector3d E2=_c.plus(_a.negative());
+	Vector3d E1(_b, _a);
+	Vector3d E2(_c, _a);
 	Vector3d P=r.getDirection().crossProduct(E2);
 	float A=E1.dotProduct(P);
 	if (A == 0.0) {
@@ -27,7 +28,7 @@ Hit Triangle::intersect(Ray r, float minDepth) {
 	}
 
 	float F = 1/A;
-	Vector3d S = r.getOrigin().plus(_a.negative());
+	Vector3d S(r.getOrigin(), _a);
 	float U = S.dotProduct(P) * F;
 	if (U < 0.0 || U > 1.0) {
 		return h;
@@ -44,8 +45,9 @@ Hit Triangle::intersect(Ray r, float minDepth) {
 		return h;
 	}
 
-	Vector3d hitPoint = (r.getOrigin().plus(r.getDirection().scalarProduct(T)));
-	h.hit(true, T, hitPoint, r.getDirection(), P.normalized(), _m);
+	Vector3d temp = r.getDirection().scalarProduct(T);
+	Point3d hitPoint3d = (r.getOrigin().translate(temp.getX(), temp.getY(), temp.getZ()));
+	h.hit(true, T, hitPoint3d, r.getDirection(), P.normalized(), _m);
 	//h.p=rayeval(r,t);
 	return (h);
 }

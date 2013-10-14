@@ -2,10 +2,13 @@
  * gnparsons@gmail.com
  * CS 566
  * September 2013
+ * Group of objects, also includes interception checks and shading
  */
 
 #include "Group.h"
 #include <iostream>
+#include "Color.h"
+#include "Point.h"
 
 Group::Group() {
 	_objects = std::vector<RTObject*>();
@@ -27,157 +30,260 @@ void Group::setBGColor(Vector3d color){
 	_bgColor = color;
 }
 
-
+//This is the really important function, gets the intersections and the final colors of the rays
+//r - ray we are checking against
+//recDepth - current recursion depth
+//maxDepth - maximum recursion depth
 Hit Group::intersect(Ray r, int recDepth, const int maxDepth) {
-	Hit h = Hit();
-	Hit closest = Hit();
+	Hit h;
+	Hit closest;
 	float minDepth = -1;
-	Vector3d finalColor = Vector3d();
+
+	Vector3d normalLightUnitVec;
+	Vector3d normalCameraUnitVec;
+	Vector3d lightToPointUnitVec;
+	Vector3d pointToLightUnitVec;
+	Vector3d lightReflectionUnitVec;
+	Vector3d viewReflectionUnitVec;
+	Vector3d pointToViewUnitVec;
+	Vector3d viewToPointUnitVec;
+
+	Color finalColor;
 	float finalR = 0.0;
 	float finalG = 0.0;
 	float finalB = 0.0;
 
-	std::cout << "number of objects to check against: " << _objects.size() << std::endl;
+	if (debugMode) {
+		std::cout << "number of objects to check against: " << _objects.size() << std::endl;
+	}
 	for (size_t i = 0; i < _objects.size(); i++) {
 		h = Hit();
-		std::cout << "Checking Ray against object#" << i << std::endl;
+		if (debugMode) {
+			std::cout << "Checking Ray against object#" << i << std::endl;
+		}
 		h = (*_objects.at(i)).intersect(r, minDepth);
 
 		if (h.didHit()) {
 			if(r.getType() == shadow) {
-				std::cout << "Shadow Hit Detected against object " << i << std::endl;
+				if (debugMode) {
+					std::cout << "\tShadow Hit Detected against object " << i << std::endl;
+				}
 				return(h);
 			}
 			closest = Hit(h);
 			minDepth = closest.getDepth();
-			std::cout << "Object " << i << " Hit Detected t=" << minDepth << " location: " << closest.getHitLocation() << std::endl;
+			if (debugMode) {
+				std::cout << "\tObject " << i << " Hit Detected t=" << minDepth << " location: " << closest.getHitLocation() << std::endl;
+			}
 		}
 	}
 
 	if(closest.didHit()) {
+		viewToPointUnitVec = closest.getHitVector();
+		pointToViewUnitVec = viewToPointUnitVec.negative();
+		normalCameraUnitVec = closest.getHitNormal();
+		if (normalCameraUnitVec.dotProduct(closest.getHitVector()) < 0) {
+			normalCameraUnitVec=normalCameraUnitVec.negative();
+		}
 		if (r.getType() != shadow) {
-			if (recDepth < maxDepth) {
-				for (size_t i = 0; i < _lights.size(); i ++) {
-					float percentLit = 1.0;
-					Ray shadowRay = Ray();
-					shadowRay.setType(shadow);
-					Vector3d shadowRayDir = _lights.at(i).getPosition().plus(closest.getHitLocation().negative());
-					shadowRayDir.normalize();
-					shadowRay.setDirection(shadowRayDir);
-					
-					Vector3d hitNormal = closest.getHitNormal();
-					if(hitNormal.dotProduct(closest.getHitVector().negative()) < 0) {
-						hitNormal = hitNormal.negative();
-					}
-					//Vector3d shadowEpsilon = 
-					shadowRay.setOrigin(closest.getHitLocation().plus(hitNormal.scalarProduct(0.0001f)));
-					//shadowRay.setOrigin(closest.getHitLocation().plus(hitNormal.scalarProduct(0.00001f)));
-					std::cout << "ShadowRay: " << " o(" << shadowRay.getOrigin() << ") dir(" << shadowRay.getDirection() << ")" << std::endl;
-					Hit shadowHit = Hit();
-					shadowHit = intersect(shadowRay, 0, 0);
-					if (shadowHit.didHit()) {
-						finalR += _bgColor.getX();
-						finalG += _bgColor.getY();
-						finalB += _bgColor.getZ();
-						std::cout << "Shadow Hit Color: (" << finalR << ", " << finalG << ", " << finalB << ")" << std::endl;
-					} else {
-						Vector3d H = shadowRayDir.plus(r.getDirection());
-						std::cout << "H1: " << H << std::endl;
-						H = H.scalarProduct(0.5);
-						std::cout << "H2: " << H << std::endl;
-						H.normalize();
-						std::cout << "H3: " << H << std::endl;
-						std::cout << "normal : " << hitNormal << std::endl;
-						float shiny = hitNormal.dotProduct(H);
-						std::cout << "Shiny: " << shiny << std::endl;
-						if (shiny < 0.0) {
-							shiny = 0.0;
-						}
-						std::cout << "Shiny (postfix): " << shiny << std::endl;
-						float e = closest.getMaterial().getSpecularExponent();
-						std::cout << "Exponent: " << e << std::endl;
-						finalR += percentLit * (_lights.at(i).getColor().getX() * closest.getMaterial().getSpecularColor().getX() * pow(shiny, e));
-						finalG += percentLit * (_lights.at(i).getColor().getY() * closest.getMaterial().getSpecularColor().getY() * pow(shiny, e));
-						finalB += percentLit * (_lights.at(i).getColor().getZ() * closest.getMaterial().getSpecularColor().getZ() * pow(shiny, e));
-						//END SPECULAR COLOR
-						std::cout << "Post Specular Color (" << finalR << ", " << finalG << ", " << finalB << ")" << std::endl;
+			for (size_t i = 0; i < _lights.size(); i ++) {
 
-						//BEGIN DIFFUSE COLOR
-						float shade = shadowRayDir.dotProduct(hitNormal);
-						if(shade < 0.0)
-						{
-							shade = 0.0;
-						}
-						finalR += percentLit * (shade * _lights.at(i).getColor().getX() * closest.getMaterial().getDiffuseColor().getX());
-						finalG += percentLit * (shade * _lights.at(i).getColor().getY() * closest.getMaterial().getDiffuseColor().getY());
-						finalB += percentLit * (shade * _lights.at(i).getColor().getZ() * closest.getMaterial().getDiffuseColor().getZ());
+				//CHECK IF WE ARE IN THIS LIGHT
+
+				//TODO: Temporary placeholder for future area lighting/soft shadows
+				float percentLit = 1.0;
+				float attenuation = 1.0;
+				Ray shadowRay;
+				shadowRay.setType(shadow);
+				pointToLightUnitVec = Vector3d(_lights.at(i).getPosition(), closest.getHitLocation());
+				//PointToLightUnitVec = _lights.at(i).getPosition().plus(closest.getHitLocation().negative());
+				pointToLightUnitVec.normalize();
+				lightToPointUnitVec = pointToLightUnitVec.negative();
+				shadowRay.setDirection(pointToLightUnitVec);
+					
+				normalLightUnitVec = closest.getHitNormal();
+				if(normalLightUnitVec.dotProduct(pointToLightUnitVec) < 0) {
+					normalLightUnitVec = normalLightUnitVec.negative();
+				}
+
+				//TODO: universal epsilon declaration
+				//shadowRay.setOrigin(closest.getHitLocation().translate(PointToLightUnitVec.scalarProduct(0.0001f)));
+				Vector3d temp = normalLightUnitVec.scalarProduct(0.0001f);
+				shadowRay.setOrigin(closest.getHitLocation().translate(temp.getX(), temp.getY(), temp.getZ()));
+
+				if (debugMode) {
+					std::cout << "ShadowRay: " << " o(" << shadowRay.getOrigin() << ") dir(" << shadowRay.getDirection() << ")" << std::endl;
+				}
+
+				Hit shadowHit;
+				shadowHit = intersect(shadowRay, 0, 0);
+				if (shadowHit.didHit()) {
+					if (debugMode) {
+						std::cout << "Shadow Hit." << std::endl;
+					}
+				} else { //not in shadow, this light contributes to final color
+					//BEGIN ATTENUATION
+					Vector3d att = _lights.at(i).getAttenuation();
+					attenuation = 1 / (att.getX() + att.getY()*minDepth + att.getZ()*minDepth*minDepth);
+					if (debugMode) {
+						std::cout << "Attenuation " << att << std::endl;
+					}
+					//END ATTENUATION
+
+
+					// BEGIN SPECULAR COLOR
+					// Full Reflection Phong Shading
+					//R = 2n(n.L)-L
+					if (debugMode) {
+						std::cout << "Calculating specular. Point3d: " << closest.getHitLocation() << " Normal: " << normalLightUnitVec << "Light Position: " << _lights.at(i).getPosition() <<  " PointToLightVec: " << pointToLightUnitVec << std::endl;
+					}
+					Vector3d a = normalLightUnitVec.scalarProduct(pointToLightUnitVec.dotProduct(normalLightUnitVec)).scalarProduct(2);
+					lightReflectionUnitVec = a.plus(pointToLightUnitVec.negative());
+					lightReflectionUnitVec.normalize();
+					float shiny = pointToViewUnitVec.dotProduct(lightReflectionUnitVec);
+					
+
+					//Blinn Half-Vector Approximation
+					/*
+					Vector3d H = Point3dToLightUnitVec.plus(viewToPoint3dUnitVec);
+					H = H.scalarProduct(0.5);
+					float shiny = normalLightUnitVec.dotProduct(H);
+					
+					if (debugMode) {
+						std::cout << "H: " << H << std::endl;
+						std::cout << "normal : " << normalLightUnitVec << std::endl;
+					}*/
+					
+					if (shiny < 0.0) {
+						shiny = 0.0;
+					}
+
+					float e = closest.getMaterial().getSpecularExponent();
+
+					if (debugMode) {
+						std::cout << "Shiny (postfix): " << shiny << std::endl;
+						std::cout << "Exponent: " << e << std::endl;
+					}
+					finalR += percentLit * attenuation * (_lights.at(i).getColor().getR() * closest.getMaterial().getSpecularColor().getR() * pow(shiny, e));
+					finalG += percentLit * attenuation * (_lights.at(i).getColor().getG() * closest.getMaterial().getSpecularColor().getG() * pow(shiny, e));
+					finalB += percentLit * attenuation * (_lights.at(i).getColor().getB() * closest.getMaterial().getSpecularColor().getB() * pow(shiny, e));
+					//END SPECULAR COLOR
+
+					if (debugMode) {
+						std::cout << "Post Specular Color (" << finalR << ", " << finalG << ", " << finalB << ")" << std::endl;
+					}
+
+					//BEGIN DIFFUSE COLOR
+					float shade = pointToLightUnitVec.dotProduct(normalLightUnitVec);
+					if(shade < 0.0)
+					{
+						shade = 0.0;
+					}
+					finalR += percentLit * attenuation * (shade * _lights.at(i).getColor().getR() * closest.getMaterial().getDiffuseColor().getR());
+					finalG += percentLit * attenuation * (shade * _lights.at(i).getColor().getG() * closest.getMaterial().getDiffuseColor().getG());
+					finalB += percentLit * attenuation * (shade * _lights.at(i).getColor().getB() * closest.getMaterial().getDiffuseColor().getB());
+					//END DIFFUSE COLOR
+
+					if (debugMode) {
 						std::cout << "Post Diffuse Color (" << finalR << ", " << finalG << ", " << finalB << ")" << std::endl;
 					}
 				}
-				finalR = finalR/getNumberOfLights();
-				finalG = finalG/getNumberOfLights();
-				finalB = finalB/getNumberOfLights();
+			}
+			finalR = finalR/getNumberOfLights();
+			finalG = finalG/getNumberOfLights();
+			finalB = finalB/getNumberOfLights();
 
-				if (finalR > 1.0) {
-					finalR = 1.0;
-				} else if (finalR < 0.0) {
-					finalR = 0.0;
-				}
-				if (finalG > 1.0) {
-					finalG = 1.0;
-				} else if (finalG < 0.0) {
-					finalG = 0.0;
-				}
-				if (finalB > 1.0) {
-					finalB = 1.0;
-				} else if (finalB < 0.0) {
-					finalB = 0.0;
-				}
+			//Peg light values at 0 or 1
+			if (finalR > 1.0) {
+				finalR = 1.0;
+			} else if (finalR < 0.0) {
+				finalR = 0.0;
+			}
+			if (finalG > 1.0) {
+				finalG = 1.0;
+			} else if (finalG < 0.0) {
+				finalG = 0.0;
+			}
+			if (finalB > 1.0) {
+				finalB = 1.0;
+			} else if (finalB < 0.0) {
+				finalB = 0.0;
+			}
 
-				if (closest.getMaterial().getReflectiveColor().getLength() > 0) {
-					//generate reflection array
-					std::cout << "In Reflection Code" << std::endl;
-					Vector3d normal = closest.getHitNormal();
-					Vector3d primary = closest.getHitVector();
-					if( primary.dotProduct(normal) < 0.0 ) {
-						normal = normal.negative();
+			if (recDepth < maxDepth) {
+				if (debugMode) {
+					std::cout << "Reflection/Refraction" << std::endl;
+				}
+				if (!closest.getMaterial().getReflectiveColor().isBlack()) {
+					
+					if (debugMode) {
+						std::cout << "In Reflection Code" << std::endl;
 					}
-					float temp1 = (primary.dotProduct(normal)) * 2.0f;
-					Vector3d temp = normal.plus(primary.negative());
-					Vector3d reflectDir = temp.scalarProduct(temp1);
+
+					//generate reflection array
+					//float temp1 = (viewToPoint3dUnitVec.dotProduct(normalCameraUnitVec)) * 2.0f;
+					//Vector3d temp = normalCameraUnitVec.plus(viewToPoint3dUnitVec.negative());
+					//Vector3d reflectDir = temp.scalarProduct(temp1);
+					//reflectDir.normalize();
+
+					float temp1 = (pointToViewUnitVec.dotProduct(normalCameraUnitVec)) * 2.0f;
+					Vector3d a = normalCameraUnitVec.scalarProduct(temp1);
+					Vector3d reflectDir = a.plus(pointToViewUnitVec.negative());
 					reflectDir.normalize();
 
-					Ray reflection_ray = Ray(closest.getHitLocation().plus(normal.scalarProduct(FLT_EPSILON)), reflectDir);
+					Vector3d blarg = normalCameraUnitVec.scalarProduct(0.0001f);
+
+					Ray reflection_ray(closest.getHitLocation().translate(blarg.getX(), blarg.getY(), blarg.getZ()), reflectDir);
 					reflection_ray.setType(reflection);
-			
-					Hit reflectHit = intersect(reflection_ray, recDepth+1, maxDepth);
-					Vector3d reflectColor = reflectHit.getColor();
-					float reflectR = closest.getMaterial().getReflectiveColor().getX();
-					float reflectG = closest.getMaterial().getReflectiveColor().getY();
-					float reflectB = closest.getMaterial().getReflectiveColor().getZ();
 
-					finalR = (float)((1.0-reflectR) * finalR) + (reflectR * reflectHit.getColor().getX());
-					finalG = (float)((1.0-reflectG) * finalG) + (reflectG * reflectHit.getColor().getY());
-					finalB = (float)((1.0-reflectB) * finalB) + (reflectB * reflectHit.getColor().getZ());
+					//test for reflection hit
+					Hit reflectHit;
+					reflectHit = intersect(reflection_ray, recDepth+1, maxDepth);
+
+					//mix colors from reflection vector and our specular/diffuse base
+					Color reflectColor = reflectHit.getColor();
+					float reflectR = closest.getMaterial().getReflectiveColor().getR();
+					float reflectG = closest.getMaterial().getReflectiveColor().getG();
+					float reflectB = closest.getMaterial().getReflectiveColor().getB();
+
+					finalR = (float)((1.0-reflectR) * finalR) + (reflectR * reflectHit.getColor().getR());
+					finalG = (float)((1.0-reflectG) * finalG) + (reflectG * reflectHit.getColor().getG());
+					finalB = (float)((1.0-reflectB) * finalB) + (reflectB * reflectHit.getColor().getB());
 				}
-				if (closest.getMaterial().getTransparencyColor().getLength() > 0.0) {
+				if (!closest.getMaterial().getTransparencyColor().isBlack()) {
+					if(debugMode) {
+						std::cout << "In Transparency Code" << std::endl;
+					}
 					//generate refraction ray
-					//intersect(refraction_ray, recDepth+1, maxDepth);
-					//TODO: TRANSLUCENCY
+					Vector3d blarg2 = viewToPointUnitVec.scalarProduct(0.001f);
+					Point3d refractOrigin = closest.getHitLocation().translate(blarg2.getX(), blarg2.getY(), blarg2.getZ());
+					//TODO: refract ray direction based on material refraction index
+					Ray refraction_ray(refractOrigin, viewToPointUnitVec);
+					refraction_ray.setType(refraction);
+
+					//test for refraction hit
+					Hit refractHit;
+					refractHit = intersect(refraction_ray, recDepth+1, maxDepth);
+
+					//mix colors from refraction vector and the specular/diffuse/reflection
+					float translucentR = closest.getMaterial().getTransparencyColor().getR();
+					float translucentG = closest.getMaterial().getTransparencyColor().getG();
+					float translucentB = closest.getMaterial().getTransparencyColor().getB();
+
+					finalR = (float)((1.0-translucentR) * finalR) + (translucentR * refractHit.getColor().getR());
+					finalG = (float)((1.0-translucentG) * finalG) + (translucentG * refractHit.getColor().getG());
+					finalB = (float)((1.0-translucentB) * finalB) + (translucentB * refractHit.getColor().getB());
 				}
-
-
-				finalColor.setX(finalR);
-				finalColor.setY(finalG);
-				finalColor.setZ(finalB);
-			
-				closest.setColor(finalColor);
-			} else {
-				closest.setColor(closest.getMaterial().getDiffuseColor());
 			}
+			finalColor.setR(finalR);
+			finalColor.setG(finalG);
+			finalColor.setB(finalB);
+
+			closest.setColor(finalColor);
 		}
 	} else {
-		closest.setColor(_bgColor);
+		//This was a shadow ray, we don't care what color the hit is.
+		closest.setColor(Color());
 	}
 
 	return (closest);

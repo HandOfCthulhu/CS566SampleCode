@@ -7,6 +7,7 @@
  */
 #include "Light.h"
 #include "Point.h"
+#include <iostream>
 
 Light::Light() {
 	_mode = Point;
@@ -81,4 +82,23 @@ void Light::setAttenuation(Vector3d attenuation) {
 
 void Light::setMode(LightMode mode) {
 	_mode = mode;
+}
+
+std::ostream& operator <<( std::ostream &out, const Light &l ){
+	l.write( out );
+	return( out );
+}
+
+void Light::write( std::ostream &out ) const{
+	if (_mode == Point) {
+		out << "PointLight: " << std::endl;
+	}
+	else if (_mode == directional) {
+		out << "DirectionalLight: " << std::endl;
+	}
+	out << "\tPosition: " << _pos << std::endl;
+	out << "\tColor: " << _color << std::endl;
+	out << "\tAttenuation: " << _att << std::endl;
+	out << "\tDirection: " << _dir << std::endl;
+	out << "\tAngle: " << _angle << std::endl;
 }

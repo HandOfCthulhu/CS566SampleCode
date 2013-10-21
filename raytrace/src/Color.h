@@ -1,3 +1,9 @@
+/* Gregory Parsons
+ * gnparsons@gmail.com
+ * CS 566
+ * September 2013
+ * For storing and dealing with colors
+ */
 #ifndef _COLOR_H_
 #define _COLOR_H_
 #include <iostream>

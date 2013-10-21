@@ -1,3 +1,9 @@
+/* Gregory Parsons
+ * gnparsons@gmail.com
+ * CS 566
+ * September 2013
+ * For storing and dealing with colors
+ */
 #include "Color.h"
 #include <iostream>
 

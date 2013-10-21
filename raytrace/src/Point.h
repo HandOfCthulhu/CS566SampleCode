@@ -1,3 +1,9 @@
+/* Gregory Parsons
+ * gnparsons@gmail.com
+ * CS 566
+ * September 2013
+ * Differentiating Points from Vectors
+ */
 #ifndef _Point3d3d_H_
 #define _Point3d3d_H_
 #include <iostream>

@@ -17,38 +17,51 @@ Triangle::Triangle(Point3d a, Point3d b, Point3d c, Material m) {
 }
 
 Hit Triangle::intersect(Ray r, float minDepth) {
-	Hit h;
+	Hit h;	
+	Vector3d E1 (_b, _a);
+	Vector3d E2 (_c, _a);
+	Vector3d pvec = r.getDirection().crossProduct(E2);
+	double det = E1.dotProduct(pvec);
 
-	Vector3d E1(_b, _a);
-	Vector3d E2(_c, _a);
-	Vector3d P=r.getDirection().crossProduct(E2);
-	float A=E1.dotProduct(P);
-	if (A == 0.0) {
+	if ((det > -0.001f) && (det < 0.001f)) {
+		if (debugMode) {
+			std::cout << "No Hit Det" << std::endl;
+		}
 		return h;
 	}
 
-	float F = 1/A;
-	Vector3d S(r.getOrigin(), _a);
-	float U = S.dotProduct(P) * F;
-	if (U < 0.0 || U > 1.0) {
+	float invDet = 1 / det;
+
+	Vector3d tvec (r.getOrigin(), _a);
+	double u = tvec.dotProduct(pvec) * invDet;
+	if ((u < 0) || (u > 1)) {
+		if (debugMode) {
+			std::cout << "No Hit U" << std::endl;
+		}
 		return h;
 	}
 
-	Vector3d Q=S.crossProduct(E1);
-	float V = r.getDirection().dotProduct(Q) * F;
-	if(V < 0.0 || V > 1.0) {
-		return h;
-	}
-	float T = E2.dotProduct(Q)*F;
-	
-	if ((minDepth > 0) && (T > minDepth)){
+	Vector3d qvec = tvec.crossProduct(E1);
+	double v = qvec.dotProduct(r.getDirection()) * invDet;
+	if ((v < 0) || (v > 1) || (u+v > 1)) {
+		if (debugMode) {
+			std::cout << "No Hit V" << std::endl;
+		}
 		return h;
 	}
 
-	Vector3d temp = r.getDirection().scalarProduct(T);
-	Point3d hitPoint3d = (r.getOrigin().translate(temp.getX(), temp.getY(), temp.getZ()));
-	h.hit(true, T, hitPoint3d, r.getDirection(), P.normalized(), _m);
-	//h.p=rayeval(r,t);
+	float t = E2.dotProduct(qvec) * invDet;
+
+	if ((t < 0) || ((minDepth > 0) && (t > minDepth))){
+		if (debugMode) {
+			std::cout << "No Hit Obstructed" << std::endl;
+		}
+		return h;
+	}
+
+	Vector3d temp = r.getDirection().scalarProduct(t);
+	Point3d hitPoint = (r.getOrigin().translate(temp.getX(), temp.getY(), temp.getZ()));
+	h.hit(true, t, hitPoint, r.getDirection(), E1.crossProduct(E2).normalized(), _m);
 	return (h);
 }
 

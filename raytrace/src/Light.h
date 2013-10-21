@@ -10,6 +10,7 @@
 #include "Vector3d.h"
 #include "Point.h"
 #include "Color.h"
+#include <iostream>
 
 enum LightMode { Point, directional };
 class Light {
@@ -31,6 +32,7 @@ class Light {
 		void setAttenuation(Vector3d attenuation);
 		void setMode(LightMode mode);
 
+		void write( std::ostream &out ) const;
 		bool debugMode;
 
 	private:
@@ -42,4 +44,7 @@ class Light {
 		Vector3d _att;
 
 };
+
+std::ostream& operator <<( std::ostream &out, const Light &l );
+
 #endif

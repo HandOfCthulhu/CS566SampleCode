@@ -73,16 +73,17 @@ Hit Group::intersect(Ray r, int recDepth, const int maxDepth) {
 			closest = Hit(h);
 			minDepth = closest.getDepth();
 			if (debugMode) {
-				std::cout << "\tObject " << i << " Hit Detected t=" << minDepth << " location: " << closest.getHitLocation() << std::endl;
+				std::cout << "\tObject " << i << " Hit Detected t=" << minDepth << " location: " << closest.getHitLocation() << " normal: " << closest.getHitNormal() << std::endl;
 			}
 		}
 	}
 
 	if(closest.didHit()) {
 		viewToPointUnitVec = closest.getHitVector();
-		pointToViewUnitVec = viewToPointUnitVec.negative();
+		Vector3d temp (r.getOrigin(), closest.getHitLocation());
+		pointToViewUnitVec = temp.normalized();
 		normalCameraUnitVec = closest.getHitNormal();
-		if (normalCameraUnitVec.dotProduct(closest.getHitVector()) < 0) {
+		if (normalCameraUnitVec.dotProduct(pointToViewUnitVec) < 0) {
 			normalCameraUnitVec=normalCameraUnitVec.negative();
 		}
 		if (r.getType() != shadow) {
@@ -93,10 +94,13 @@ Hit Group::intersect(Ray r, int recDepth, const int maxDepth) {
 				//TODO: Temporary placeholder for future area lighting/soft shadows
 				float percentLit = 1.0;
 				float attenuation = 1.0;
+
+
 				Ray shadowRay;
 				shadowRay.setType(shadow);
 				pointToLightUnitVec = Vector3d(_lights.at(i).getPosition(), closest.getHitLocation());
-				//PointToLightUnitVec = _lights.at(i).getPosition().plus(closest.getHitLocation().negative());
+				float distanceToLight = pointToLightUnitVec.getLength();
+				
 				pointToLightUnitVec.normalize();
 				lightToPointUnitVec = pointToLightUnitVec.negative();
 				shadowRay.setDirection(pointToLightUnitVec);
@@ -107,24 +111,24 @@ Hit Group::intersect(Ray r, int recDepth, const int maxDepth) {
 				}
 
 				//TODO: universal epsilon declaration
-				//shadowRay.setOrigin(closest.getHitLocation().translate(PointToLightUnitVec.scalarProduct(0.0001f)));
 				Vector3d temp = normalLightUnitVec.scalarProduct(0.0001f);
 				shadowRay.setOrigin(closest.getHitLocation().translate(temp.getX(), temp.getY(), temp.getZ()));
 
 				if (debugMode) {
+					std::cout << "normalLightUnitVec " << normalLightUnitVec << std::endl;
 					std::cout << "ShadowRay: " << " o(" << shadowRay.getOrigin() << ") dir(" << shadowRay.getDirection() << ")" << std::endl;
 				}
 
 				Hit shadowHit;
 				shadowHit = intersect(shadowRay, 0, 0);
-				if (shadowHit.didHit()) {
+				if (shadowHit.didHit() && (shadowHit.getDepth() < distanceToLight)) {
 					if (debugMode) {
-						std::cout << "Shadow Hit." << std::endl;
+						std::cout << "Shadow Hit: T: " << shadowHit.getDepth() << " Point " << shadowHit.getHitLocation() << std::endl;
 					}
 				} else { //not in shadow, this light contributes to final color
 					//BEGIN ATTENUATION
 					Vector3d att = _lights.at(i).getAttenuation();
-					attenuation = 1 / (att.getX() + att.getY()*minDepth + att.getZ()*minDepth*minDepth);
+					attenuation = 1 / (att.getX() + att.getY()*distanceToLight + att.getZ()*distanceToLight*distanceToLight);
 					if (debugMode) {
 						std::cout << "Attenuation " << att << std::endl;
 					}
@@ -221,11 +225,6 @@ Hit Group::intersect(Ray r, int recDepth, const int maxDepth) {
 					}
 
 					//generate reflection array
-					//float temp1 = (viewToPoint3dUnitVec.dotProduct(normalCameraUnitVec)) * 2.0f;
-					//Vector3d temp = normalCameraUnitVec.plus(viewToPoint3dUnitVec.negative());
-					//Vector3d reflectDir = temp.scalarProduct(temp1);
-					//reflectDir.normalize();
-
 					float temp1 = (pointToViewUnitVec.dotProduct(normalCameraUnitVec)) * 2.0f;
 					Vector3d a = normalCameraUnitVec.scalarProduct(temp1);
 					Vector3d reflectDir = a.plus(pointToViewUnitVec.negative());
@@ -233,12 +232,16 @@ Hit Group::intersect(Ray r, int recDepth, const int maxDepth) {
 
 					Vector3d blarg = normalCameraUnitVec.scalarProduct(0.0001f);
 
-					Ray reflection_ray(closest.getHitLocation().translate(blarg.getX(), blarg.getY(), blarg.getZ()), reflectDir);
-					reflection_ray.setType(reflection);
+					Ray reflectionRay(closest.getHitLocation().translate(blarg.getX(), blarg.getY(), blarg.getZ()), reflectDir);
+					reflectionRay.setType(reflection);
+					if (debugMode) {
+						std::cout << "Reflection: I: " << pointToViewUnitVec << " N: " << normalCameraUnitVec << " R: " << reflectDir << std::endl;
+						std::cout << "Reflection Ray: o: " << reflectionRay.getOrigin() << " d: " << reflectionRay.getDirection() << std::endl;
+					}
 
 					//test for reflection hit
 					Hit reflectHit;
-					reflectHit = intersect(reflection_ray, recDepth+1, maxDepth);
+					reflectHit = intersect(reflectionRay, recDepth+1, maxDepth);
 
 					//mix colors from reflection vector and our specular/diffuse base
 					Color reflectColor = reflectHit.getColor();
@@ -255,7 +258,7 @@ Hit Group::intersect(Ray r, int recDepth, const int maxDepth) {
 						std::cout << "In Transparency Code" << std::endl;
 					}
 					//generate refraction ray
-					Vector3d blarg2 = viewToPointUnitVec.scalarProduct(0.001f);
+					Vector3d blarg2 = viewToPointUnitVec.scalarProduct(0.0001f);
 					Point3d refractOrigin = closest.getHitLocation().translate(blarg2.getX(), blarg2.getY(), blarg2.getZ());
 					//TODO: refract ray direction based on material refraction index
 					Ray refraction_ray(refractOrigin, viewToPointUnitVec);
@@ -306,5 +309,8 @@ void Group::write( std::ostream &out ) const {
 	out << "Group: " << std::endl;
 	for (size_t i = 0; i < _objects.size(); i++) { 
 		out << (*(_objects.at(i))) << std::endl;
+	}
+	for (size_t i = 0; i < _lights.size(); i++) {
+		out << _lights.at(i) << std::endl;
 	}
 }

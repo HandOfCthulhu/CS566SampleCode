@@ -1,3 +1,9 @@
+/* Gregory Parsons
+ * gnparsons@gmail.com
+ * CS 566
+ * September 2013
+ * Differentiating Points from Vectos
+ */
 #include "Point.h"
 #include <iostream>
 
